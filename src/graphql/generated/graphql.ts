@@ -53,6 +53,7 @@ export type AccountNode = Node & {
   amount: Scalars['Decimal']['output'];
   bank: BankNode;
   currency: CurrencyType;
+  firstAdded: Scalars['Boolean']['output'];
   firstTransaction: Maybe<Scalars['Date']['output']>;
   id: Scalars['ID']['output'];
   isActive: Scalars['Boolean']['output'];
@@ -86,6 +87,14 @@ export type AccountOrder = {
   bank: InputMaybe<BankOrder>;
   lastUpdate: InputMaybe<Ordering>;
   name: InputMaybe<Ordering>;
+};
+
+export type AccountPartialInput = {
+  firstAdded: InputMaybe<Scalars['Boolean']['input']>;
+  id: Scalars['ID']['input'];
+  isActive: InputMaybe<Scalars['Boolean']['input']>;
+  name: InputMaybe<Scalars['String']['input']>;
+  type: InputMaybe<AccountType>;
 };
 
 export enum AccountType {
@@ -526,6 +535,7 @@ export type Mutation = {
   createStockPrice: StockPriceNode;
   createStockTransaction: StockTransactionNode;
   createTransaction: TransactionNode;
+  updateAccount: AccountNode;
   updateSalary: SalaryNode;
 };
 
@@ -567,6 +577,11 @@ export type MutationCreateStockTransactionArgs = {
 
 export type MutationCreateTransactionArgs = {
   data: TransactionInput;
+};
+
+
+export type MutationUpdateAccountArgs = {
+  data: AccountPartialInput;
 };
 
 
@@ -1356,7 +1371,18 @@ export type GetAccountDetailQueryVariables = Exact<{
 }>;
 
 
-export type GetAccountDetailQuery = { __typename?: 'Query', accountRelay: { __typename?: 'AccountNodeConnection', edges: Array<{ __typename?: 'AccountNodeEdge', node: { __typename?: 'AccountNode', amount: string, name: string, currency: CurrencyType, lastUpdate: string | null, id: string, isActive: boolean, type: AccountType, firstTransaction: string | null, lastTransaction: string | null, bank: { __typename?: 'BankNode', id: string, name: string } } }> } };
+export type GetAccountDetailQuery = { __typename?: 'Query', accountRelay: { __typename?: 'AccountNodeConnection', edges: Array<{ __typename?: 'AccountNodeEdge', node: { __typename?: 'AccountNode', amount: string, name: string, currency: CurrencyType, lastUpdate: string | null, id: string, isActive: boolean, firstAdded: boolean, type: AccountType, firstTransaction: string | null, lastTransaction: string | null, bank: { __typename?: 'BankNode', id: string, name: string } } }> } };
+
+export type UpdateAccountMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  name: InputMaybe<Scalars['String']['input']>;
+  type: InputMaybe<AccountType>;
+  isActive: InputMaybe<Scalars['Boolean']['input']>;
+  firstAdded: InputMaybe<Scalars['Boolean']['input']>;
+}>;
+
+
+export type UpdateAccountMutation = { __typename?: 'Mutation', updateAccount: { __typename?: 'AccountNode', id: string, name: string, type: AccountType, isActive: boolean, firstAdded: boolean } };
 
 export type GetAccountTypeQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1914,6 +1940,7 @@ export const GetAccountDetailDocument = gql`
         lastUpdate
         id
         isActive
+        firstAdded
         type
         firstTransaction
         lastTransaction
@@ -1958,6 +1985,49 @@ export type GetAccountDetailQueryHookResult = ReturnType<typeof useGetAccountDet
 export type GetAccountDetailLazyQueryHookResult = ReturnType<typeof useGetAccountDetailLazyQuery>;
 export type GetAccountDetailSuspenseQueryHookResult = ReturnType<typeof useGetAccountDetailSuspenseQuery>;
 export type GetAccountDetailQueryResult = Apollo.QueryResult<GetAccountDetailQuery, GetAccountDetailQueryVariables>;
+export const UpdateAccountDocument = gql`
+    mutation UpdateAccount($id: ID!, $name: String, $type: AccountType, $isActive: Boolean, $firstAdded: Boolean) {
+  updateAccount(
+    data: {id: $id, name: $name, type: $type, isActive: $isActive, firstAdded: $firstAdded}
+  ) {
+    id
+    name
+    type
+    isActive
+    firstAdded
+  }
+}
+    `;
+export type UpdateAccountMutationFn = Apollo.MutationFunction<UpdateAccountMutation, UpdateAccountMutationVariables>;
+
+/**
+ * __useUpdateAccountMutation__
+ *
+ * To run a mutation, you first call `useUpdateAccountMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateAccountMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateAccountMutation, { data, loading, error }] = useUpdateAccountMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      name: // value for 'name'
+ *      type: // value for 'type'
+ *      isActive: // value for 'isActive'
+ *      firstAdded: // value for 'firstAdded'
+ *   },
+ * });
+ */
+export function useUpdateAccountMutation(baseOptions?: Apollo.MutationHookOptions<UpdateAccountMutation, UpdateAccountMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateAccountMutation, UpdateAccountMutationVariables>(UpdateAccountDocument, options);
+      }
+export type UpdateAccountMutationHookResult = ReturnType<typeof useUpdateAccountMutation>;
+export type UpdateAccountMutationResult = Apollo.MutationResult<UpdateAccountMutation>;
+export type UpdateAccountMutationOptions = Apollo.BaseMutationOptions<UpdateAccountMutation, UpdateAccountMutationVariables>;
 export const GetAccountTypeDocument = gql`
     query GetAccountType {
   __type(name: "AccountType") {

@@ -1,11 +1,31 @@
 import { useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useGetAccountDetailQuery, useGetTransactionListQuery } from "@/graphql/generated/graphql";
+import {
+  AccountType,
+  useGetAccountDetailQuery,
+  useGetTransactionListQuery,
+  useUpdateAccountMutation,
+} from "@/graphql/generated/graphql";
 import { formatCurrency, getDisplayColor } from "@/lib/format";
 import { CATEGORY_LABELS } from "@/lib/constants";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -17,7 +37,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight, Circle, Plus, RefreshCw } from "lucide-react";
+import { ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight, Circle, Pencil, Plus, RefreshCw } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { CreateTransactionDialog } from "@/features/transactions/create-transaction-dialog";
 
@@ -51,6 +71,7 @@ export function AccountDetailPage() {
   const { accountId } = useParams<{ accountId: string }>();
   const navigate = useNavigate();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const [showUnreviewedOnly, setShowUnreviewedOnly] = useState(false);
   const [toggling, setToggling] = useState<Set<string>>(new Set());
   const [localReviewed, setLocalReviewed] = useState<Map<string, boolean>>(new Map());
@@ -59,10 +80,12 @@ export function AccountDetailPage() {
 
   const decodedId = accountId ? decodeURIComponent(accountId) : undefined;
 
-  const { data: accountData, loading: accountLoading } = useGetAccountDetailQuery({
+  const { data: accountData, loading: accountLoading, refetch: refetchAccount } = useGetAccountDetailQuery({
     variables: { accountId: decodedId ?? null },
     skip: !decodedId,
   });
+
+  const [updateAccount] = useUpdateAccountMutation();
 
   const {
     data: txData,
@@ -155,6 +178,13 @@ export function AccountDetailPage() {
                 <Badge variant="secondary">
                   {ACCOUNT_TYPE_LABELS[account.type] || account.type}
                 </Badge>
+                {!account.isActive && <Badge variant="destructive">비활성</Badge>}
+                {account.firstAdded && (
+                  <Badge variant="outline" className="text-green-600 border-green-600">첫 거래부터</Badge>
+                )}
+                <Button variant="ghost" size="icon" onClick={() => setShowEditDialog(true)}>
+                  <Pencil className="h-4 w-4" />
+                </Button>
               </>
             )}
           </div>
@@ -349,6 +379,19 @@ export function AccountDetailPage() {
           }}
         />
       )}
+
+      {account && (
+        <EditAccountDialog
+          account={account}
+          open={showEditDialog}
+          onOpenChange={setShowEditDialog}
+          onSave={async (values) => {
+            await updateAccount({ variables: { id: account.id, ...values } });
+            refetchAccount();
+            setShowEditDialog(false);
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -359,4 +402,86 @@ function formatDateSafe(dateStr: string): string {
   } catch {
     return dateStr;
   }
+}
+
+interface EditAccountDialogProps {
+  account: {
+    id: string;
+    name: string;
+    type: string;
+    isActive: boolean;
+    firstAdded: boolean;
+  };
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSave: (values: { name: string; type: AccountType; isActive: boolean; firstAdded: boolean }) => Promise<void>;
+}
+
+function EditAccountDialog({ account, open, onOpenChange, onSave }: EditAccountDialogProps) {
+  const [name, setName] = useState(account.name);
+  const [type, setType] = useState<AccountType>(account.type as AccountType);
+  const [isActive, setIsActive] = useState(account.isActive);
+  const [firstAdded, setFirstAdded] = useState(account.firstAdded);
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await onSave({ name, type, isActive, firstAdded });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>계좌 수정</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-2">
+          <div className="space-y-1">
+            <Label htmlFor="edit-name">이름</Label>
+            <Input
+              id="edit-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="edit-type">계좌 유형</Label>
+            <Select value={type} onValueChange={(v) => setType(v as AccountType)}>
+              <SelectTrigger id="edit-type">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(ACCOUNT_TYPE_LABELS).map(([val, label]) => (
+                  <SelectItem key={val} value={val}>{label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="edit-active">활성 계좌</Label>
+            <Switch id="edit-active" checked={isActive} onCheckedChange={setIsActive} />
+          </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <Label htmlFor="edit-first-added">첫 거래부터 기록</Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                첫 거래부터 차근차근 쌓고 있으면 ON, 아직 초기 내역 미입력이면 OFF
+              </p>
+            </div>
+            <Switch id="edit-first-added" checked={firstAdded} onCheckedChange={setFirstAdded} />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>취소</Button>
+          <Button onClick={handleSave} disabled={saving}>
+            {saving ? "저장 중..." : "저장"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 }

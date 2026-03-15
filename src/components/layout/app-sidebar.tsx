@@ -3,6 +3,7 @@ import {
   Banknote,
   Building2,
   CheckSquare,
+  ClipboardCheck,
   LayoutDashboard,
   LineChart,
   LogOut,
@@ -52,6 +53,7 @@ const navGroups = [
       { title: "검토", url: "/review", icon: CheckSquare },
       { title: "Amazon Orders", url: "/amazon", icon: Package },
       { title: "환전", url: "/exchanges", icon: ArrowLeftRight },
+      { title: "감사", url: "/audit", icon: ClipboardCheck },
     ],
   },
 ];

@@ -30,6 +30,7 @@ type AccountNode implements Node {
   currency: CurrencyType!
   lastUpdate: DateTime
   isActive: Boolean!
+  firstAdded: Boolean!
   lastTransaction: Date
   firstTransaction: Date
 }
@@ -512,12 +513,22 @@ The `JSON` scalar type represents JSON values as specified by [ECMA-404](https:/
 """
 scalar JSON @specifiedBy(url: "https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf")
 
+input AccountPartialInput {
+  id: ID!
+  name: String
+  type: AccountType
+  isActive: Boolean
+  firstAdded: Boolean
+}
+
 type Mutation {
   createAccount(data: AccountInput!): AccountNode!
+  updateAccount(data: AccountPartialInput!): AccountNode!
   createTransaction(data: TransactionInput!): TransactionNode!
   createRetailer(data: RetailerInput!): RetailerNode!
   createStock(data: StockInput!): StockNode!
   createStockTransaction(data: StockTransactionInput!): StockTransactionNode!
+  createStockPrice(data: StockPriceInput!): StockPriceNode!
   createAmazonOrder(data: AmazonOrderInput!): AmazonOrderNode!
   createSalary(data: SalaryInput!): SalaryNode!
   updateSalary(data: SalaryPartialInput!): SalaryNode!
@@ -681,6 +692,22 @@ type Query {
     """Returns the items in the list that come after the specified cursor."""
     last: Int = null
   ): StockTransactionNodeConnection!
+  stockPriceRelay(
+    filters: StockPriceFilter
+    order: StockPriceOrder
+
+    """Returns the items in the list that come before the specified cursor."""
+    before: String = null
+
+    """Returns the items in the list that come after the specified cursor."""
+    after: String = null
+
+    """Returns the first n items from the list."""
+    first: Int = null
+
+    """Returns the items in the list that come after the specified cursor."""
+    last: Int = null
+  ): StockPriceNodeConnection!
   amazonOrderRelay(
     order: AmazonOrderOrder
 
@@ -698,6 +725,22 @@ type Query {
   ): AmazonOrderNodeConnection!
   salaryYears: [Int!]!
   salarySummary: [SalarySummaryNode!]!
+  exchangeRelay(
+    filters: ExchangeFilter
+    order: ExchangeOrder
+
+    """Returns the items in the list that come before the specified cursor."""
+    before: String = null
+
+    """Returns the items in the list that come after the specified cursor."""
+    after: String = null
+
+    """Returns the first n items from the list."""
+    first: Int = null
+
+    """Returns the items in the list that come after the specified cursor."""
+    last: Int = null
+  ): ExchangeNodeConnection!
 }
 
 input RetailerFilter {
@@ -942,6 +985,55 @@ type StockTransactionNodeEdge {
   node: StockTransactionNode!
 }
 
+input StockPriceFilter {
+  id: IDBaseFilterLookup
+  stock: StockFilter
+  date: DateDateFilterLookup
+  AND: StockPriceFilter
+  OR: StockPriceFilter
+  NOT: StockPriceFilter
+  DISTINCT: Boolean
+}
+
+input StockPriceInput {
+  date: Date!
+  stock: OneToManyInput!
+  price: Decimal!
+}
+
+input StockPriceOrder {
+  date: Ordering
+  price: Ordering
+}
+
+type StockPriceNode implements Node {
+  id: ID!
+  date: Date!
+  stock: StockNode!
+  price: Decimal!
+}
+
+"""A connection to a list of items."""
+type StockPriceNodeConnection {
+  """Pagination data for this connection"""
+  pageInfo: PageInfo!
+
+  """Contains the nodes in this connection"""
+  edges: [StockPriceNodeEdge!]!
+
+  """Total quantity of existing nodes."""
+  totalCount: Int
+}
+
+"""An edge in a connection."""
+type StockPriceNodeEdge {
+  """A cursor for use in pagination"""
+  cursor: String!
+
+  """The item at the end of the edge"""
+  node: StockPriceNode!
+}
+
 input StrFilterLookup {
   """Exact match. Filter will be skipped on `null` value"""
   exact: String
@@ -1063,6 +1155,7 @@ input TransactionFilter {
   id: IDBaseFilterLookup
   date: DateDateFilterLookup
   account: AccountFilter!
+  reviewed: BoolBaseFilterLookup
   AND: TransactionFilter
   OR: TransactionFilter
   NOT: TransactionFilter
@@ -1122,4 +1215,106 @@ input TransactionOrder {
   account: AccountOrder
   amount: Ordering
   balance: Ordering
+}
+
+enum ExchangeType {
+  ETC
+  BANK
+  WIREBARLEY
+  CREDITCARD
+}
+
+input ExchangeTypeFilterLookup {
+  """Exact match. Filter will be skipped on `null` value"""
+  exact: ExchangeType
+
+  """Assignment test. Filter will be skipped on `null` value"""
+  isNull: Boolean
+
+  """
+  Exact match of items in a given list. Filter will be skipped on `null` value
+  """
+  inList: [ExchangeType!]
+
+  """Case-insensitive exact match. Filter will be skipped on `null` value"""
+  iExact: ExchangeType
+
+  """
+  Case-sensitive containment test. Filter will be skipped on `null` value
+  """
+  contains: ExchangeType
+
+  """
+  Case-insensitive containment test. Filter will be skipped on `null` value
+  """
+  iContains: ExchangeType
+
+  """Case-sensitive starts-with. Filter will be skipped on `null` value"""
+  startsWith: ExchangeType
+
+  """Case-insensitive starts-with. Filter will be skipped on `null` value"""
+  iStartsWith: ExchangeType
+
+  """Case-sensitive ends-with. Filter will be skipped on `null` value"""
+  endsWith: ExchangeType
+
+  """Case-insensitive ends-with. Filter will be skipped on `null` value"""
+  iEndsWith: ExchangeType
+
+  """
+  Case-sensitive regular expression match. Filter will be skipped on `null` value
+  """
+  regex: ExchangeType
+
+  """
+  Case-insensitive regular expression match. Filter will be skipped on `null` value
+  """
+  iRegex: ExchangeType
+}
+
+input ExchangeFilter {
+  date: DateDateFilterLookup
+  exchangeType: ExchangeTypeFilterLookup
+  AND: ExchangeFilter
+  OR: ExchangeFilter
+  NOT: ExchangeFilter
+  DISTINCT: Boolean
+}
+
+input ExchangeOrder {
+  date: Ordering
+}
+
+type ExchangeNode implements Node {
+  id: ID!
+  date: Date!
+  fromTransaction: TransactionNode!
+  toTransaction: TransactionNode!
+  fromAmount: Decimal!
+  toAmount: Decimal!
+  fromCurrency: CurrencyType!
+  toCurrency: CurrencyType!
+  ratioPerKrw: Decimal
+  exchangeType: ExchangeType!
+}
+
+"""A connection to a list of items."""
+type ExchangeNodeConnection {
+  """Pagination data for this connection"""
+  pageInfo: PageInfo!
+
+  """Contains the nodes in this connection"""
+  edges: [ExchangeNodeEdge!]!
+
+  """Total quantity of existing nodes."""
+  totalCount: Int
+}
+
+"""An edge in a connection."""
+type ExchangeNodeEdge {
+  """A cursor for use in pagination"""
+  cursor: String!
+
+  """The item at the end of the edge"""
+  node: ExchangeNode!
 }

@@ -64,6 +64,9 @@ const ExchangesPage = lazy(() =>
     default: m.ExchangesPage,
   })),
 );
+const AuditPage = lazy(() =>
+  import("@/features/audit/audit-page").then((m) => ({ default: m.AuditPage })),
+);
 
 function SuspenseWrapper({ children }: { children: React.ReactNode }) {
   return (
@@ -214,6 +217,14 @@ export const routes: RouteObject[] = [
         element: (
           <SuspenseWrapper>
             <ExchangesPage />
+          </SuspenseWrapper>
+        ),
+      },
+      {
+        path: "audit",
+        element: (
+          <SuspenseWrapper>
+            <AuditPage />
           </SuspenseWrapper>
         ),
       },

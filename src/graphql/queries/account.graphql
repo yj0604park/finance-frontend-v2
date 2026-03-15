@@ -65,11 +65,22 @@ query GetAccountDetail($accountId: ID) {
         lastUpdate
         id
         isActive
+        firstAdded
         type
         firstTransaction
         lastTransaction
       }
     }
+  }
+}
+
+mutation UpdateAccount($id: ID!, $name: String, $type: AccountType, $isActive: Boolean, $firstAdded: Boolean) {
+  updateAccount(data: { id: $id, name: $name, type: $type, isActive: $isActive, firstAdded: $firstAdded }) {
+    id
+    name
+    type
+    isActive
+    firstAdded
   }
 }
 
