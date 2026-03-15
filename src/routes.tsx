@@ -37,8 +37,32 @@ const CategoryPage = lazy(() =>
 const RetailersPage = lazy(() =>
   import("@/features/retailers/retailers-page").then((m) => ({ default: m.RetailersPage })),
 );
+const RetailerDetailPage = lazy(() =>
+  import("@/features/retailers/retailer-detail-page").then((m) => ({
+    default: m.RetailerDetailPage,
+  })),
+);
 const StocksPage = lazy(() =>
   import("@/features/stocks/stocks-page").then((m) => ({ default: m.StocksPage })),
+);
+const StockDetailPage = lazy(() =>
+  import("@/features/stocks/stock-detail-page").then((m) => ({ default: m.StockDetailPage })),
+);
+const ReviewPage = lazy(() =>
+  import("@/features/review/review-page").then((m) => ({ default: m.ReviewPage })),
+);
+const AmazonPage = lazy(() =>
+  import("@/features/amazon/amazon-page").then((m) => ({ default: m.AmazonPage })),
+);
+const TransactionDetailPage = lazy(() =>
+  import("@/features/transactions/transaction-detail-page").then((m) => ({
+    default: m.TransactionDetailPage,
+  })),
+);
+const ExchangesPage = lazy(() =>
+  import("@/features/exchanges/exchanges-page").then((m) => ({
+    default: m.ExchangesPage,
+  })),
 );
 
 function SuspenseWrapper({ children }: { children: React.ReactNode }) {
@@ -106,6 +130,14 @@ export const routes: RouteObject[] = [
         ),
       },
       {
+        path: "transactions/:transactionId",
+        element: (
+          <SuspenseWrapper>
+            <TransactionDetailPage />
+          </SuspenseWrapper>
+        ),
+      },
+      {
         path: "categories",
         element: (
           <SuspenseWrapper>
@@ -118,6 +150,14 @@ export const routes: RouteObject[] = [
         element: (
           <SuspenseWrapper>
             <RetailersPage />
+          </SuspenseWrapper>
+        ),
+      },
+      {
+        path: "retailers/:retailerId",
+        element: (
+          <SuspenseWrapper>
+            <RetailerDetailPage />
           </SuspenseWrapper>
         ),
       },
@@ -142,6 +182,38 @@ export const routes: RouteObject[] = [
         element: (
           <SuspenseWrapper>
             <StocksPage />
+          </SuspenseWrapper>
+        ),
+      },
+      {
+        path: "stocks/:stockId",
+        element: (
+          <SuspenseWrapper>
+            <StockDetailPage />
+          </SuspenseWrapper>
+        ),
+      },
+      {
+        path: "review",
+        element: (
+          <SuspenseWrapper>
+            <ReviewPage />
+          </SuspenseWrapper>
+        ),
+      },
+      {
+        path: "amazon",
+        element: (
+          <SuspenseWrapper>
+            <AmazonPage />
+          </SuspenseWrapper>
+        ),
+      },
+      {
+        path: "exchanges",
+        element: (
+          <SuspenseWrapper>
+            <ExchangesPage />
           </SuspenseWrapper>
         ),
       },

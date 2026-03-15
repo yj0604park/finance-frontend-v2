@@ -1,0 +1,83 @@
+mutation CreateSalary(
+  $date: Date!
+  $grossPay: Decimal!
+  $totalAdjustment: Decimal!
+  $totalWithheld: Decimal!
+  $totalDeduction: Decimal!
+  $netPay: Decimal!
+  $payDetail: JSON!
+  $adjustmentDetail: JSON!
+  $taxDetail: JSON!
+  $deductionDetail: JSON!
+  $transaction: OneToManyInput!
+) {
+  createSalary(
+    data: {
+      date: $date
+      grossPay: $grossPay
+      totalAdjustment: $totalAdjustment
+      totalWithheld: $totalWithheld
+      totalDeduction: $totalDeduction
+      netPay: $netPay
+      payDetail: $payDetail
+      adjustmentDetail: $adjustmentDetail
+      taxDetail: $taxDetail
+      deductionDetail: $deductionDetail
+      transaction: $transaction
+    }
+  ) {
+    id
+    date
+    grossPay
+    totalAdjustment
+    totalWithheld
+    totalDeduction
+    netPay
+    payDetail
+    adjustmentDetail
+    taxDetail
+    deductionDetail
+  }
+}
+
+mutation UpdateSalary(
+  $id: ID!
+  $date: Date
+  $grossPay: Decimal
+  $totalAdjustment: Decimal
+  $totalWithheld: Decimal
+  $totalDeduction: Decimal
+  $netPay: Decimal
+  $payDetail: JSON!
+  $adjustmentDetail: JSON!
+  $taxDetail: JSON!
+  $deductionDetail: JSON!
+) {
+  updateSalary(
+    data: {
+      id: $id
+      date: $date
+      grossPay: $grossPay
+      totalAdjustment: $totalAdjustment
+      totalWithheld: $totalWithheld
+      totalDeduction: $totalDeduction
+      netPay: $netPay
+      payDetail: $payDetail
+      adjustmentDetail: $adjustmentDetail
+      taxDetail: $taxDetail
+      deductionDetail: $deductionDetail
+    }
+  ) {
+    id
+    date
+    grossPay
+    totalAdjustment
+    totalWithheld
+    totalDeduction
+    netPay
+    payDetail
+    adjustmentDetail
+    taxDetail
+    deductionDetail
+  }
+}

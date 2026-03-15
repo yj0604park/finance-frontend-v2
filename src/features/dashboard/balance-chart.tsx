@@ -43,8 +43,16 @@ export function BalanceChart({ title, data, loading, currency }: BalanceChartPro
             <AreaChart data={chartData}>
               <defs>
                 <linearGradient id={`gradient-${currency}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0} />
+                  <stop
+                    offset="5%"
+                    stopColor={currency === "KRW" ? "#6366f1" : "#14b8a6"}
+                    stopOpacity={0.3}
+                  />
+                  <stop
+                    offset="95%"
+                    stopColor={currency === "KRW" ? "#6366f1" : "#14b8a6"}
+                    stopOpacity={0}
+                  />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
@@ -85,7 +93,7 @@ export function BalanceChart({ title, data, loading, currency }: BalanceChartPro
               <Area
                 type="monotone"
                 dataKey="amount"
-                stroke="hsl(var(--chart-1))"
+                stroke={currency === "KRW" ? "#6366f1" : "#14b8a6"}
                 fill={`url(#gradient-${currency})`}
                 strokeWidth={2}
               />

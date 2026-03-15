@@ -16,11 +16,15 @@ query GetAllTransactions($after: String, $first: Int, $accountId: ID, $dateGte: 
         balance
         date
         isInternal
+        reviewed
+        requiresDetail
         type
         note
         retailer {
           id
           name
+          type
+          category
         }
         account {
           id
@@ -42,10 +46,24 @@ query GetAllTransactions($after: String, $first: Int, $accountId: ID, $dateGte: 
   }
 }
 
-query GetTransactionList($accountId: ID) {
+query GetRetailerDetail($retailerId: ID) {
+  retailerRelay(filters: { id: { exact: $retailerId } }) {
+    edges {
+      node {
+        id
+        name
+        category
+      }
+    }
+  }
+}
+
+query GetTransactionList($accountId: ID, $first: Int, $after: String) {
   transactionRelay(
     filters: { account: { bank: {}, id: { exact: $accountId } } }
     order: { date: DESC, amount: ASC, balance: ASC }
+    first: $first
+    after: $after
   ) {
     edges {
       cursor
@@ -69,6 +87,12 @@ query GetTransactionList($accountId: ID) {
       }
     }
     totalCount
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+      startCursor
+      endCursor
+    }
   }
   accountRelay(filters: { bank: {}, id: { exact: $accountId } }) {
     edges {
@@ -93,6 +117,80 @@ query GetLastTransactionDate {
     edges {
       node {
         date
+      }
+    }
+  }
+}
+
+query GetUnreviewedTransactions($first: Int!, $after: String!, $dateGte: Date, $dateLte: Date) {
+  transactionRelay(
+    first: $first
+    after: $after
+    filters: {
+      account: { bank: {} }
+      reviewed: { exact: false }
+      date: { gte: $dateGte, lte: $dateLte }
+    }
+    order: { date: DESC, id: DESC }
+  ) {
+    edges {
+      cursor
+      node {
+        id
+        amount
+        date
+        isInternal
+        requiresDetail
+        reviewed
+        type
+        note
+        retailer {
+          id
+          name
+        }
+        account {
+          id
+          name
+          currency
+          bank {
+            name
+          }
+        }
+      }
+    }
+    totalCount
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+
+query GetTransaction($id: ID) {
+  transactionRelay(filters: { id: { exact: $id }, account: { bank: {} } }, first: 1) {
+    edges {
+      node {
+        id
+        amount
+        balance
+        date
+        isInternal
+        reviewed
+        requiresDetail
+        type
+        note
+        retailer {
+          id
+          name
+        }
+        account {
+          id
+          name
+          currency
+          bank {
+            name
+          }
+        }
       }
     }
   }

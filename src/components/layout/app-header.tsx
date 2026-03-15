@@ -8,7 +8,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 const routeLabels: Record<string, string> = {
   dashboard: "Dashboard",
@@ -27,19 +27,22 @@ export function AppHeader() {
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink href="/dashboard">Home</BreadcrumbLink>
+            <BreadcrumbLink asChild>
+              <Link to="/dashboard">Home</Link>
+            </BreadcrumbLink>
           </BreadcrumbItem>
           {segments.map((segment, i) => {
             const isLast = i === segments.length - 1;
             const label = routeLabels[segment] || segment;
+            const path = `/${segments.slice(0, i + 1).join("/")}`;
             return (
               <BreadcrumbItem key={segment}>
                 <BreadcrumbSeparator />
                 {isLast ? (
                   <BreadcrumbPage>{label}</BreadcrumbPage>
                 ) : (
-                  <BreadcrumbLink href={`/${segments.slice(0, i + 1).join("/")}`}>
-                    {label}
+                  <BreadcrumbLink asChild>
+                    <Link to={path}>{label}</Link>
                   </BreadcrumbLink>
                 )}
               </BreadcrumbItem>

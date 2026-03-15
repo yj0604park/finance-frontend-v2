@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
 import { format, subMonths } from "date-fns";
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
-import { useGetAllTransactionsQuery } from "@/graphql/generated/graphql";
+import { useAllTransactions } from "@/hook/useAllTransactions";
 import { formatCurrency, toNumber } from "@/lib/format";
+import { CATEGORY_LABELS } from "@/lib/constants";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -16,22 +17,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TransactionCategory } from "@/graphql/generated/graphql";
 import { Decimal } from "decimal.js";
-
-const CATEGORY_LABELS: Record<string, string> = {
-  ETC: "기타",
-  FOOD: "식비",
-  TRANSPORT: "교통",
-  SHOPPING: "쇼핑",
-  HEALTH: "건강",
-  CULTURE: "문화",
-  TRAVEL: "여행",
-  EDUCATION: "교육",
-  COMMUNICATION: "통신",
-  UTILITY: "공과금",
-  INCOME: "수입",
-  TRANSFER: "이체",
-};
 
 const CHART_COLORS = [
   "#6366f1", "#f59e0b", "#10b981", "#ef4444", "#3b82f6",
@@ -47,17 +34,13 @@ export function CategoryPage() {
   const [endDate, setEndDate] = useState<string>(defaultEndDate);
   const [currency, setCurrency] = useState<string>("USD");
 
-  const { data, loading, error } = useGetAllTransactionsQuery({
-    variables: {
-      first: 1000,
-      after: "",
-      accountId: null,
-      dateGte: startDate || null,
-      dateLte: endDate || null,
-    },
+  const { edges: transactionEdges, loading, error } = useAllTransactions({
+    accountId: null,
+    dateGte: startDate || null,
+    dateLte: endDate || null,
   });
 
-  const transactions = data?.transactionRelay?.edges ?? [];
+  const transactions = transactionEdges;
 
   const { spendingByCategory, incomeByCategory } = useMemo(() => {
     const spending: Record<string, Decimal> = {};
@@ -65,7 +48,7 @@ export function CategoryPage() {
 
     for (const edge of transactions) {
       const tx = edge.node;
-      if (tx.account.currency !== currency || tx.isInternal) continue;
+      if (tx.account.currency !== currency || tx.isInternal || tx.type === TransactionCategory.Stock) continue;
       const amount = new Decimal(tx.amount);
       const category = tx.type;
 

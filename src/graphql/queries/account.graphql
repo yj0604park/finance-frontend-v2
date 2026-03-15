@@ -80,3 +80,10 @@ query GetAccountType {
     }
   }
 }
+
+mutation CreateAccount($name: String!, $bankId: ID!, $type: AccountType, $currency: CurrencyType) {
+  createAccount(data: { name: $name, bank: { set: $bankId }, type: $type, currency: $currency }) {
+    id
+    name
+  }
+}

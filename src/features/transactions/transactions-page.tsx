@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { format, parseISO, subMonths } from "date-fns";
+import { format, parseISO } from "date-fns";
+import { useNavigate } from "react-router-dom";
 import {
   useGetAllTransactionsQuery,
   useGetSimpleAccountListQuery,
 } from "@/graphql/generated/graphql";
 import { formatCurrency, getDisplayColor } from "@/lib/format";
+import { CATEGORY_LABELS } from "@/lib/constants";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -22,28 +24,11 @@ import {
 
 const PAGE_SIZE = 50;
 
-const CATEGORY_LABELS: Record<string, string> = {
-  ETC: "기타",
-  FOOD: "식비",
-  TRANSPORT: "교통",
-  SHOPPING: "쇼핑",
-  HEALTH: "건강",
-  CULTURE: "문화",
-  TRAVEL: "여행",
-  EDUCATION: "교육",
-  COMMUNICATION: "통신",
-  UTILITY: "공과금",
-  INCOME: "수입",
-  TRANSFER: "이체",
-};
-
 export function TransactionsPage() {
-  const defaultEndDate = format(new Date(), "yyyy-MM-dd");
-  const defaultStartDate = format(subMonths(new Date(), 3), "yyyy-MM-dd");
-
+  const navigate = useNavigate();
   const [accountFilter, setAccountFilter] = useState<string>("all");
-  const [startDate, setStartDate] = useState<string>(defaultStartDate);
-  const [endDate, setEndDate] = useState<string>(defaultEndDate);
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
   const [cursor, setCursor] = useState<string>("");
   const [cursorStack, setCursorStack] = useState<string[]>([]);
 
@@ -173,7 +158,11 @@ export function TransactionsPage() {
                     const tx = edge.node;
                     const currency = tx.account.currency;
                     return (
-                      <TableRow key={tx.id}>
+                      <TableRow
+                        key={tx.id}
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => navigate(`/transactions/${encodeURIComponent(tx.id)}`)}
+                      >
                         <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
                           {format(parseISO(tx.date), "yyyy-MM-dd")}
                         </TableCell>

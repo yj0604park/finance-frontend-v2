@@ -1,0 +1,1125 @@
+input AccountFilter {
+  id: IDBaseFilterLookup
+  name: StrFilterLookup
+  bank: BankFilter!
+  amount: DecimalComparisonFilterLookup
+  type: AccountTypeFilterLookup
+  currency: CurrencyTypeFilterLookup
+  lastUpdate: DatetimeDatetimeFilterLookup
+  isActive: BoolBaseFilterLookup
+  AND: AccountFilter
+  OR: AccountFilter
+  NOT: AccountFilter
+  DISTINCT: Boolean
+}
+
+input AccountInput {
+  name: String!
+  bank: OneToManyInput!
+  type: AccountType
+  currency: CurrencyType
+  amount: Decimal! = "0"
+}
+
+type AccountNode implements Node {
+  id: ID!
+  name: String!
+  bank: BankNode!
+  amount: Decimal!
+  type: AccountType!
+  currency: CurrencyType!
+  lastUpdate: DateTime
+  isActive: Boolean!
+  lastTransaction: Date
+  firstTransaction: Date
+}
+
+"""A connection to a list of items."""
+type AccountNodeConnection {
+  """Pagination data for this connection"""
+  pageInfo: PageInfo!
+
+  """Contains the nodes in this connection"""
+  edges: [AccountNodeEdge!]!
+
+  """Total quantity of existing nodes."""
+  totalCount: Int
+}
+
+"""An edge in a connection."""
+type AccountNodeEdge {
+  """A cursor for use in pagination"""
+  cursor: String!
+
+  """The item at the end of the edge"""
+  node: AccountNode!
+}
+
+input AccountOrder {
+  name: Ordering
+  bank: BankOrder
+  lastUpdate: Ordering
+}
+
+enum AccountType {
+  CHECKING_ACCOUNT
+  SAVINGS_ACCOUNT
+  INSTALLMENT_SAVING
+  TIME_DEPOSIT
+  CREDIT_CARD
+  STOCK
+  LOAN
+}
+
+input AccountTypeFilterLookup {
+  """Exact match. Filter will be skipped on `null` value"""
+  exact: AccountType
+
+  """Assignment test. Filter will be skipped on `null` value"""
+  isNull: Boolean
+
+  """
+  Exact match of items in a given list. Filter will be skipped on `null` value
+  """
+  inList: [AccountType!]
+
+  """Case-insensitive exact match. Filter will be skipped on `null` value"""
+  iExact: AccountType
+
+  """
+  Case-sensitive containment test. Filter will be skipped on `null` value
+  """
+  contains: AccountType
+
+  """
+  Case-insensitive containment test. Filter will be skipped on `null` value
+  """
+  iContains: AccountType
+
+  """Case-sensitive starts-with. Filter will be skipped on `null` value"""
+  startsWith: AccountType
+
+  """Case-insensitive starts-with. Filter will be skipped on `null` value"""
+  iStartsWith: AccountType
+
+  """Case-sensitive ends-with. Filter will be skipped on `null` value"""
+  endsWith: AccountType
+
+  """Case-insensitive ends-with. Filter will be skipped on `null` value"""
+  iEndsWith: AccountType
+
+  """
+  Case-sensitive regular expression match. Filter will be skipped on `null` value
+  """
+  regex: AccountType
+
+  """
+  Case-insensitive regular expression match. Filter will be skipped on `null` value
+  """
+  iRegex: AccountType
+}
+
+input AmazonOrderInput {
+  date: Date!
+  item: String!
+  isReturned: Boolean
+  transaction: OneToManyInput
+  returnTransaction: OneToManyInput
+}
+
+type AmazonOrderNode implements Node {
+  id: ID!
+  date: Date!
+  item: String!
+  isReturned: Boolean!
+  transaction: TransactionNode
+  returnTransaction: TransactionNode
+}
+
+"""A connection to a list of items."""
+type AmazonOrderNodeConnection {
+  """Pagination data for this connection"""
+  pageInfo: PageInfo!
+
+  """Contains the nodes in this connection"""
+  edges: [AmazonOrderNodeEdge!]!
+
+  """Total quantity of existing nodes."""
+  totalCount: Int
+}
+
+"""An edge in a connection."""
+type AmazonOrderNodeEdge {
+  """A cursor for use in pagination"""
+  cursor: String!
+
+  """The item at the end of the edge"""
+  node: AmazonOrderNode!
+}
+
+input AmazonOrderOrder {
+  date: Ordering
+}
+
+input AmountSnapshotFilter {
+  id: IDBaseFilterLookup
+  date: DateDateFilterLookup
+  currency: CurrencyTypeFilterLookup
+  AND: AmountSnapshotFilter
+  OR: AmountSnapshotFilter
+  NOT: AmountSnapshotFilter
+  DISTINCT: Boolean
+}
+
+type AmountSnapshotNode implements Node {
+  id: ID!
+  date: Date!
+  currency: CurrencyType!
+  amount: Decimal!
+  summary: JSON
+}
+
+"""A connection to a list of items."""
+type AmountSnapshotNodeConnection {
+  """Pagination data for this connection"""
+  pageInfo: PageInfo!
+
+  """Contains the nodes in this connection"""
+  edges: [AmountSnapshotNodeEdge!]!
+
+  """Total quantity of existing nodes."""
+  totalCount: Int
+}
+
+"""An edge in a connection."""
+type AmountSnapshotNodeEdge {
+  """A cursor for use in pagination"""
+  cursor: String!
+
+  """The item at the end of the edge"""
+  node: AmountSnapshotNode!
+}
+
+input AmountSnapshotOrder {
+  name: Ordering
+  date: Ordering
+}
+
+type BankBalance {
+  currency: String!
+  value: Decimal!
+}
+
+input BankFilter {
+  id: IDBaseFilterLookup
+  name: StrFilterLookup
+  AND: BankFilter
+  OR: BankFilter
+  NOT: BankFilter
+  DISTINCT: Boolean
+}
+
+type BankNode implements Node {
+  id: ID!
+  name: String!
+  balance: [BankBalance!]!
+  accountSet(
+    filters: AccountFilter
+    order: AccountOrder
+
+    """Returns the items in the list that come before the specified cursor."""
+    before: String = null
+
+    """Returns the items in the list that come after the specified cursor."""
+    after: String = null
+
+    """Returns the first n items from the list."""
+    first: Int = null
+
+    """Returns the items in the list that come after the specified cursor."""
+    last: Int = null
+  ): AccountNodeConnection!
+}
+
+"""A connection to a list of items."""
+type BankNodeConnection {
+  """Pagination data for this connection"""
+  pageInfo: PageInfo!
+
+  """Contains the nodes in this connection"""
+  edges: [BankNodeEdge!]!
+
+  """Total quantity of existing nodes."""
+  totalCount: Int
+}
+
+"""An edge in a connection."""
+type BankNodeEdge {
+  """A cursor for use in pagination"""
+  cursor: String!
+
+  """The item at the end of the edge"""
+  node: BankNode!
+}
+
+input BankOrder {
+  name: Ordering
+}
+
+input BoolBaseFilterLookup {
+  """Exact match. Filter will be skipped on `null` value"""
+  exact: Boolean
+
+  """Assignment test. Filter will be skipped on `null` value"""
+  isNull: Boolean
+
+  """
+  Exact match of items in a given list. Filter will be skipped on `null` value
+  """
+  inList: [Boolean!]
+}
+
+enum CurrencyType {
+  KRW
+  USD
+}
+
+input CurrencyTypeFilterLookup {
+  """Exact match. Filter will be skipped on `null` value"""
+  exact: CurrencyType
+
+  """Assignment test. Filter will be skipped on `null` value"""
+  isNull: Boolean
+
+  """
+  Exact match of items in a given list. Filter will be skipped on `null` value
+  """
+  inList: [CurrencyType!]
+
+  """Case-insensitive exact match. Filter will be skipped on `null` value"""
+  iExact: CurrencyType
+
+  """
+  Case-sensitive containment test. Filter will be skipped on `null` value
+  """
+  contains: CurrencyType
+
+  """
+  Case-insensitive containment test. Filter will be skipped on `null` value
+  """
+  iContains: CurrencyType
+
+  """Case-sensitive starts-with. Filter will be skipped on `null` value"""
+  startsWith: CurrencyType
+
+  """Case-insensitive starts-with. Filter will be skipped on `null` value"""
+  iStartsWith: CurrencyType
+
+  """Case-sensitive ends-with. Filter will be skipped on `null` value"""
+  endsWith: CurrencyType
+
+  """Case-insensitive ends-with. Filter will be skipped on `null` value"""
+  iEndsWith: CurrencyType
+
+  """
+  Case-sensitive regular expression match. Filter will be skipped on `null` value
+  """
+  regex: CurrencyType
+
+  """
+  Case-insensitive regular expression match. Filter will be skipped on `null` value
+  """
+  iRegex: CurrencyType
+}
+
+"""Date (isoformat)"""
+scalar Date
+
+input DateDateFilterLookup {
+  """Exact match. Filter will be skipped on `null` value"""
+  exact: Date
+
+  """Assignment test. Filter will be skipped on `null` value"""
+  isNull: Boolean
+
+  """
+  Exact match of items in a given list. Filter will be skipped on `null` value
+  """
+  inList: [Date!]
+
+  """Greater than. Filter will be skipped on `null` value"""
+  gt: Date
+
+  """Greater than or equal to. Filter will be skipped on `null` value"""
+  gte: Date
+
+  """Less than. Filter will be skipped on `null` value"""
+  lt: Date
+
+  """Less than or equal to. Filter will be skipped on `null` value"""
+  lte: Date
+
+  """Inclusive range test (between)"""
+  range: DateRangeLookup
+  year: IntComparisonFilterLookup
+  month: IntComparisonFilterLookup
+  day: IntComparisonFilterLookup
+  weekDay: IntComparisonFilterLookup
+  isoWeekDay: IntComparisonFilterLookup
+  week: IntComparisonFilterLookup
+  isoYear: IntComparisonFilterLookup
+  quarter: IntComparisonFilterLookup
+}
+
+input DateRangeLookup {
+  start: Date = null
+  end: Date = null
+}
+
+"""Date with time (isoformat)"""
+scalar DateTime
+
+input DatetimeDatetimeFilterLookup {
+  """Exact match. Filter will be skipped on `null` value"""
+  exact: DateTime
+
+  """Assignment test. Filter will be skipped on `null` value"""
+  isNull: Boolean
+
+  """
+  Exact match of items in a given list. Filter will be skipped on `null` value
+  """
+  inList: [DateTime!]
+
+  """Greater than. Filter will be skipped on `null` value"""
+  gt: DateTime
+
+  """Greater than or equal to. Filter will be skipped on `null` value"""
+  gte: DateTime
+
+  """Less than. Filter will be skipped on `null` value"""
+  lt: DateTime
+
+  """Less than or equal to. Filter will be skipped on `null` value"""
+  lte: DateTime
+
+  """Inclusive range test (between)"""
+  range: DatetimeRangeLookup
+  year: IntComparisonFilterLookup
+  month: IntComparisonFilterLookup
+  day: IntComparisonFilterLookup
+  weekDay: IntComparisonFilterLookup
+  isoWeekDay: IntComparisonFilterLookup
+  week: IntComparisonFilterLookup
+  isoYear: IntComparisonFilterLookup
+  quarter: IntComparisonFilterLookup
+  hour: IntComparisonFilterLookup
+  minute: IntComparisonFilterLookup
+  second: IntComparisonFilterLookup
+  date: IntComparisonFilterLookup
+  time: IntComparisonFilterLookup
+}
+
+input DatetimeRangeLookup {
+  start: DateTime = null
+  end: DateTime = null
+}
+
+"""Decimal (fixed-point)"""
+scalar Decimal
+
+input DecimalComparisonFilterLookup {
+  """Exact match. Filter will be skipped on `null` value"""
+  exact: Decimal
+
+  """Assignment test. Filter will be skipped on `null` value"""
+  isNull: Boolean
+
+  """
+  Exact match of items in a given list. Filter will be skipped on `null` value
+  """
+  inList: [Decimal!]
+
+  """Greater than. Filter will be skipped on `null` value"""
+  gt: Decimal
+
+  """Greater than or equal to. Filter will be skipped on `null` value"""
+  gte: Decimal
+
+  """Less than. Filter will be skipped on `null` value"""
+  lt: Decimal
+
+  """Less than or equal to. Filter will be skipped on `null` value"""
+  lte: Decimal
+
+  """Inclusive range test (between)"""
+  range: DecimalRangeLookup
+}
+
+input DecimalRangeLookup {
+  start: Decimal = null
+  end: Decimal = null
+}
+
+input IDBaseFilterLookup {
+  """Exact match. Filter will be skipped on `null` value"""
+  exact: ID
+
+  """Assignment test. Filter will be skipped on `null` value"""
+  isNull: Boolean
+
+  """
+  Exact match of items in a given list. Filter will be skipped on `null` value
+  """
+  inList: [ID!]
+}
+
+input IntComparisonFilterLookup {
+  """Exact match. Filter will be skipped on `null` value"""
+  exact: Int
+
+  """Assignment test. Filter will be skipped on `null` value"""
+  isNull: Boolean
+
+  """
+  Exact match of items in a given list. Filter will be skipped on `null` value
+  """
+  inList: [Int!]
+
+  """Greater than. Filter will be skipped on `null` value"""
+  gt: Int
+
+  """Greater than or equal to. Filter will be skipped on `null` value"""
+  gte: Int
+
+  """Less than. Filter will be skipped on `null` value"""
+  lt: Int
+
+  """Less than or equal to. Filter will be skipped on `null` value"""
+  lte: Int
+
+  """Inclusive range test (between)"""
+  range: IntRangeLookup
+}
+
+input IntRangeLookup {
+  start: Int = null
+  end: Int = null
+}
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf).
+"""
+scalar JSON @specifiedBy(url: "https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf")
+
+type Mutation {
+  createAccount(data: AccountInput!): AccountNode!
+  createTransaction(data: TransactionInput!): TransactionNode!
+  createRetailer(data: RetailerInput!): RetailerNode!
+  createStock(data: StockInput!): StockNode!
+  createStockTransaction(data: StockTransactionInput!): StockTransactionNode!
+  createAmazonOrder(data: AmazonOrderInput!): AmazonOrderNode!
+  createSalary(data: SalaryInput!): SalaryNode!
+  updateSalary(data: SalaryPartialInput!): SalaryNode!
+}
+
+"""An object with a Globally Unique ID"""
+interface Node {
+  """The Globally Unique ID of this object"""
+  id: ID!
+}
+
+input OneToManyInput {
+  set: ID
+}
+
+enum Ordering {
+  ASC
+  ASC_NULLS_FIRST
+  ASC_NULLS_LAST
+  DESC
+  DESC_NULLS_FIRST
+  DESC_NULLS_LAST
+}
+
+"""Information to aid in pagination."""
+type PageInfo {
+  """When paginating forwards, are there more items?"""
+  hasNextPage: Boolean!
+
+  """When paginating backwards, are there more items?"""
+  hasPreviousPage: Boolean!
+
+  """When paginating backwards, the cursor to continue."""
+  startCursor: String
+
+  """When paginating forwards, the cursor to continue."""
+  endCursor: String
+}
+
+type Query {
+  transactionRelay(
+    filters: TransactionFilter
+    order: TransactionOrder
+
+    """Returns the items in the list that come before the specified cursor."""
+    before: String = null
+
+    """Returns the items in the list that come after the specified cursor."""
+    after: String = null
+
+    """Returns the first n items from the list."""
+    first: Int = null
+
+    """Returns the items in the list that come after the specified cursor."""
+    last: Int = null
+  ): TransactionNodeConnection!
+  retailerRelay(
+    filters: RetailerFilter
+
+    """Returns the items in the list that come before the specified cursor."""
+    before: String = null
+
+    """Returns the items in the list that come after the specified cursor."""
+    after: String = null
+
+    """Returns the first n items from the list."""
+    first: Int = null
+
+    """Returns the items in the list that come after the specified cursor."""
+    last: Int = null
+  ): RetailerNodeConnection!
+  bankRelay(
+    filters: BankFilter
+
+    """Returns the items in the list that come before the specified cursor."""
+    before: String = null
+
+    """Returns the items in the list that come after the specified cursor."""
+    after: String = null
+
+    """Returns the first n items from the list."""
+    first: Int = null
+
+    """Returns the items in the list that come after the specified cursor."""
+    last: Int = null
+  ): BankNodeConnection!
+  accountRelay(
+    filters: AccountFilter
+    order: AccountOrder
+
+    """Returns the items in the list that come before the specified cursor."""
+    before: String = null
+
+    """Returns the items in the list that come after the specified cursor."""
+    after: String = null
+
+    """Returns the first n items from the list."""
+    first: Int = null
+
+    """Returns the items in the list that come after the specified cursor."""
+    last: Int = null
+  ): AccountNodeConnection!
+  amountSnapshotRelay(
+    filters: AmountSnapshotFilter
+    order: AmountSnapshotOrder
+
+    """Returns the items in the list that come before the specified cursor."""
+    before: String = null
+
+    """Returns the items in the list that come after the specified cursor."""
+    after: String = null
+
+    """Returns the first n items from the list."""
+    first: Int = null
+
+    """Returns the items in the list that come after the specified cursor."""
+    last: Int = null
+  ): AmountSnapshotNodeConnection!
+  salaryRelay(
+    filters: SalaryFilter
+    order: SalaryOrder
+
+    """Returns the items in the list that come before the specified cursor."""
+    before: String = null
+
+    """Returns the items in the list that come after the specified cursor."""
+    after: String = null
+
+    """Returns the first n items from the list."""
+    first: Int = null
+
+    """Returns the items in the list that come after the specified cursor."""
+    last: Int = null
+  ): SalaryNodeConnection!
+  stockRelay(
+    """Returns the items in the list that come before the specified cursor."""
+    before: String = null
+
+    """Returns the items in the list that come after the specified cursor."""
+    after: String = null
+
+    """Returns the first n items from the list."""
+    first: Int = null
+
+    """Returns the items in the list that come after the specified cursor."""
+    last: Int = null
+  ): StockNodeConnection!
+  stockTransactionRelay(
+    filters: StockTransactionFilter
+    order: StockTransactionOrder
+
+    """Returns the items in the list that come before the specified cursor."""
+    before: String = null
+
+    """Returns the items in the list that come after the specified cursor."""
+    after: String = null
+
+    """Returns the first n items from the list."""
+    first: Int = null
+
+    """Returns the items in the list that come after the specified cursor."""
+    last: Int = null
+  ): StockTransactionNodeConnection!
+  amazonOrderRelay(
+    order: AmazonOrderOrder
+
+    """Returns the items in the list that come before the specified cursor."""
+    before: String = null
+
+    """Returns the items in the list that come after the specified cursor."""
+    after: String = null
+
+    """Returns the first n items from the list."""
+    first: Int = null
+
+    """Returns the items in the list that come after the specified cursor."""
+    last: Int = null
+  ): AmazonOrderNodeConnection!
+  salaryYears: [Int!]!
+  salarySummary: [SalarySummaryNode!]!
+}
+
+input RetailerFilter {
+  id: IDBaseFilterLookup
+  name: StrFilterLookup
+  category: TransactionCategoryFilterLookup
+  AND: RetailerFilter
+  OR: RetailerFilter
+  NOT: RetailerFilter
+  DISTINCT: Boolean
+}
+
+input RetailerInput {
+  name: String!
+  type: RetailerType
+  category: TransactionCategory
+}
+
+type RetailerNode implements Node {
+  id: ID!
+  name: String!
+  type: RetailerType!
+  category: TransactionCategory!
+}
+
+"""A connection to a list of items."""
+type RetailerNodeConnection {
+  """Pagination data for this connection"""
+  pageInfo: PageInfo!
+
+  """Contains the nodes in this connection"""
+  edges: [RetailerNodeEdge!]!
+
+  """Total quantity of existing nodes."""
+  totalCount: Int
+}
+
+"""An edge in a connection."""
+type RetailerNodeEdge {
+  """A cursor for use in pagination"""
+  cursor: String!
+
+  """The item at the end of the edge"""
+  node: RetailerNode!
+}
+
+enum RetailerType {
+  ETC
+  STORE
+  PERSON
+  BANK
+  SERVICE
+  INCOME
+  RESTAURANT
+}
+
+input SalaryFilter {
+  id: IDBaseFilterLookup
+  date: DateDateFilterLookup
+  AND: SalaryFilter
+  OR: SalaryFilter
+  NOT: SalaryFilter
+  DISTINCT: Boolean
+}
+
+input SalaryInput {
+  date: Date!
+  currency: CurrencyType
+  grossPay: Decimal!
+  totalAdjustment: Decimal!
+  totalWithheld: Decimal!
+  totalDeduction: Decimal!
+  netPay: Decimal!
+  payDetail: JSON!
+  adjustmentDetail: JSON!
+  taxDetail: JSON!
+  deductionDetail: JSON!
+  transaction: OneToManyInput!
+}
+
+type SalaryNode implements Node {
+  id: ID!
+  date: Date!
+  grossPay: Decimal!
+  totalAdjustment: Decimal!
+  totalWithheld: Decimal!
+  totalDeduction: Decimal!
+  netPay: Decimal!
+  payDetail: JSON!
+  adjustmentDetail: JSON!
+  taxDetail: JSON!
+  deductionDetail: JSON!
+  transaction: TransactionNode!
+}
+
+"""A connection to a list of items."""
+type SalaryNodeConnection {
+  """Pagination data for this connection"""
+  pageInfo: PageInfo!
+
+  """Contains the nodes in this connection"""
+  edges: [SalaryNodeEdge!]!
+
+  """Total quantity of existing nodes."""
+  totalCount: Int
+}
+
+"""An edge in a connection."""
+type SalaryNodeEdge {
+  """A cursor for use in pagination"""
+  cursor: String!
+
+  """The item at the end of the edge"""
+  node: SalaryNode!
+}
+
+input SalaryOrder {
+  date: Ordering
+}
+
+input SalaryPartialInput {
+  id: ID!
+  date: Date
+  currency: CurrencyType
+  grossPay: Decimal
+  totalAdjustment: Decimal
+  totalWithheld: Decimal
+  totalDeduction: Decimal
+  netPay: Decimal
+  payDetail: JSON!
+  adjustmentDetail: JSON!
+  taxDetail: JSON!
+  deductionDetail: JSON!
+  transaction: OneToManyInput
+}
+
+type SalarySummaryNode {
+  year: Int!
+  totalGrossPay: Decimal!
+}
+
+input StockInput {
+  ticker: String
+  name: String!
+  currency: CurrencyType
+}
+
+type StockNode implements Node {
+  id: ID!
+  ticker: String
+  name: String!
+  currency: CurrencyType!
+}
+
+"""A connection to a list of items."""
+type StockNodeConnection {
+  """Pagination data for this connection"""
+  pageInfo: PageInfo!
+
+  """Contains the nodes in this connection"""
+  edges: [StockNodeEdge!]!
+
+  """Total quantity of existing nodes."""
+  totalCount: Int
+}
+
+"""An edge in a connection."""
+type StockNodeEdge {
+  """A cursor for use in pagination"""
+  cursor: String!
+
+  """The item at the end of the edge"""
+  node: StockNode!
+}
+
+input StockTransactionInput {
+  date: Date!
+  account: OneToManyInput!
+  stock: OneToManyInput!
+  relatedTransaction: OneToManyInput
+  price: Decimal!
+  amount: Decimal!
+  shares: Decimal!
+  note: String
+}
+
+input StockFilter {
+  id: IDBaseFilterLookup
+  name: StrFilterLookup
+  AND: StockFilter
+  OR: StockFilter
+  NOT: StockFilter
+  DISTINCT: Boolean
+}
+
+input StockTransactionFilter {
+  id: IDBaseFilterLookup
+  stock: StockFilter
+  date: DateDateFilterLookup
+  AND: StockTransactionFilter
+  OR: StockTransactionFilter
+  NOT: StockTransactionFilter
+  DISTINCT: Boolean
+}
+
+input StockTransactionOrder {
+  date: Ordering
+  price: Ordering
+}
+
+type StockTransactionNode implements Node {
+  id: ID!
+  date: Date!
+  account: AccountNode!
+  stock: StockNode!
+  relatedTransaction: TransactionNode
+  price: Decimal!
+  amount: Decimal!
+  shares: Decimal!
+  balance: Decimal
+  note: String
+}
+
+"""A connection to a list of items."""
+type StockTransactionNodeConnection {
+  """Pagination data for this connection"""
+  pageInfo: PageInfo!
+
+  """Contains the nodes in this connection"""
+  edges: [StockTransactionNodeEdge!]!
+
+  """Total quantity of existing nodes."""
+  totalCount: Int
+}
+
+"""An edge in a connection."""
+type StockTransactionNodeEdge {
+  """A cursor for use in pagination"""
+  cursor: String!
+
+  """The item at the end of the edge"""
+  node: StockTransactionNode!
+}
+
+input StrFilterLookup {
+  """Exact match. Filter will be skipped on `null` value"""
+  exact: String
+
+  """Assignment test. Filter will be skipped on `null` value"""
+  isNull: Boolean
+
+  """
+  Exact match of items in a given list. Filter will be skipped on `null` value
+  """
+  inList: [String!]
+
+  """Case-insensitive exact match. Filter will be skipped on `null` value"""
+  iExact: String
+
+  """
+  Case-sensitive containment test. Filter will be skipped on `null` value
+  """
+  contains: String
+
+  """
+  Case-insensitive containment test. Filter will be skipped on `null` value
+  """
+  iContains: String
+
+  """Case-sensitive starts-with. Filter will be skipped on `null` value"""
+  startsWith: String
+
+  """Case-insensitive starts-with. Filter will be skipped on `null` value"""
+  iStartsWith: String
+
+  """Case-sensitive ends-with. Filter will be skipped on `null` value"""
+  endsWith: String
+
+  """Case-insensitive ends-with. Filter will be skipped on `null` value"""
+  iEndsWith: String
+
+  """
+  Case-sensitive regular expression match. Filter will be skipped on `null` value
+  """
+  regex: String
+
+  """
+  Case-insensitive regular expression match. Filter will be skipped on `null` value
+  """
+  iRegex: String
+}
+
+enum TransactionCategory {
+  SERVICE
+  DAILY_NECESSITY
+  MEMBERSHIP
+  GROCERY
+  EAT_OUT
+  CLOTHING
+  PRESENT
+  TRANSPORTATION
+  HOUSING
+  LEISURE
+  MEDICAL
+  PARENTING
+  TRANSFER
+  INTEREST
+  INCOME
+  STOCK
+  CASH
+  ETC
+}
+
+input TransactionCategoryFilterLookup {
+  """Exact match. Filter will be skipped on `null` value"""
+  exact: TransactionCategory
+
+  """Assignment test. Filter will be skipped on `null` value"""
+  isNull: Boolean
+
+  """
+  Exact match of items in a given list. Filter will be skipped on `null` value
+  """
+  inList: [TransactionCategory!]
+
+  """Case-insensitive exact match. Filter will be skipped on `null` value"""
+  iExact: TransactionCategory
+
+  """
+  Case-sensitive containment test. Filter will be skipped on `null` value
+  """
+  contains: TransactionCategory
+
+  """
+  Case-insensitive containment test. Filter will be skipped on `null` value
+  """
+  iContains: TransactionCategory
+
+  """Case-sensitive starts-with. Filter will be skipped on `null` value"""
+  startsWith: TransactionCategory
+
+  """Case-insensitive starts-with. Filter will be skipped on `null` value"""
+  iStartsWith: TransactionCategory
+
+  """Case-sensitive ends-with. Filter will be skipped on `null` value"""
+  endsWith: TransactionCategory
+
+  """Case-insensitive ends-with. Filter will be skipped on `null` value"""
+  iEndsWith: TransactionCategory
+
+  """
+  Case-sensitive regular expression match. Filter will be skipped on `null` value
+  """
+  regex: TransactionCategory
+
+  """
+  Case-insensitive regular expression match. Filter will be skipped on `null` value
+  """
+  iRegex: TransactionCategory
+}
+
+input TransactionFilter {
+  id: IDBaseFilterLookup
+  date: DateDateFilterLookup
+  account: AccountFilter!
+  AND: TransactionFilter
+  OR: TransactionFilter
+  NOT: TransactionFilter
+  DISTINCT: Boolean
+}
+
+input TransactionInput {
+  amount: Decimal!
+  account: OneToManyInput!
+  retailer: OneToManyInput
+  date: Date!
+  type: TransactionCategory
+  isInternal: Boolean
+  note: String
+}
+
+type TransactionNode implements Node {
+  id: ID!
+  amount: Decimal!
+  account: AccountNode!
+  retailer: RetailerNode
+  date: Date!
+  type: TransactionCategory!
+  isInternal: Boolean!
+  requiresDetail: Boolean!
+  reviewed: Boolean!
+  balance: Decimal
+  note: String
+  relatedTransaction: TransactionNode
+  getSortingAmount: Float!
+}
+
+"""A connection to a list of items."""
+type TransactionNodeConnection {
+  """Pagination data for this connection"""
+  pageInfo: PageInfo!
+
+  """Contains the nodes in this connection"""
+  edges: [TransactionNodeEdge!]!
+
+  """Total quantity of existing nodes."""
+  totalCount: Int
+}
+
+"""An edge in a connection."""
+type TransactionNodeEdge {
+  """A cursor for use in pagination"""
+  cursor: String!
+
+  """The item at the end of the edge"""
+  node: TransactionNode!
+}
+
+input TransactionOrder {
+  id: Ordering
+  date: Ordering
+  account: AccountOrder
+  amount: Ordering
+  balance: Ordering
+}

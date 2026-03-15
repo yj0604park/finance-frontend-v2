@@ -11,3 +11,70 @@ query GetStockList {
     totalCount
   }
 }
+
+mutation CreateStock($name: String!, $ticker: String, $currency: CurrencyType) {
+  createStock(data: { name: $name, ticker: $ticker, currency: $currency }) {
+    id
+    name
+    ticker
+    currency
+  }
+}
+
+query GetStockPrices($stockId: ID!, $first: Int, $after: String) {
+  stockPriceRelay(
+    filters: { stock: { id: { exact: $stockId } } }
+    order: { date: DESC }
+    first: $first
+    after: $after
+  ) {
+    edges {
+      node {
+        id
+        date
+        price
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+    totalCount
+  }
+}
+
+mutation CreateStockPrice($stockId: ID!, $date: Date!, $price: Decimal!) {
+  createStockPrice(data: { stock: { set: $stockId }, date: $date, price: $price }) {
+    id
+    date
+    price
+  }
+}
+
+mutation CreateStockTransaction(
+  $date: Date!
+  $accountId: ID!
+  $stockId: ID!
+  $price: Decimal!
+  $amount: Decimal!
+  $shares: Decimal!
+  $note: String
+) {
+  createStockTransaction(
+    data: {
+      date: $date
+      account: { set: $accountId }
+      stock: { set: $stockId }
+      price: $price
+      amount: $amount
+      shares: $shares
+      note: $note
+    }
+  ) {
+    id
+    price
+    amount
+    shares
+    note
+  }
+}

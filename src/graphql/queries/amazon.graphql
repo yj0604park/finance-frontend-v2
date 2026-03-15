@@ -1,0 +1,52 @@
+query GetAmazonOrders($first: Int, $after: String) {
+  amazonOrderRelay(first: $first, after: $after, order: { date: DESC }) {
+    edges {
+      cursor
+      node {
+        id
+        date
+        item
+        isReturned
+        transaction {
+          id
+          amount
+          account {
+            currency
+          }
+        }
+        returnTransaction {
+          id
+          amount
+        }
+      }
+    }
+    totalCount
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+      startCursor
+      endCursor
+    }
+  }
+}
+
+mutation CreateAmazonOrder(
+  $date: Date!
+  $item: String!
+  $isReturned: Boolean
+  $transactionId: ID
+) {
+  createAmazonOrder(
+    data: {
+      date: $date
+      item: $item
+      isReturned: $isReturned
+      transaction: { set: $transactionId }
+    }
+  ) {
+    id
+    date
+    item
+    isReturned
+  }
+}

@@ -1,0 +1,43 @@
+query GetExchangeList($first: Int!, $after: String!) {
+  exchangeRelay(
+    order: { date: DESC }
+    first: $first
+    after: $after
+  ) {
+    edges {
+      node {
+        id
+        date
+        fromAmount
+        toAmount
+        fromCurrency
+        toCurrency
+        ratioPerKrw
+        exchangeType
+        fromTransaction {
+          id
+          amount
+          account {
+            id
+            name
+            currency
+          }
+        }
+        toTransaction {
+          id
+          amount
+          account {
+            id
+            name
+            currency
+          }
+        }
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+    totalCount
+  }
+}

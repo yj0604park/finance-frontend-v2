@@ -1,9 +1,25 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useGetAccountListQuery, useGetBankSimpleListQuery } from "@/graphql/generated/graphql";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import {
+  AccountType,
+  CurrencyType,
+  useCreateAccountMutation,
+  useGetAccountListQuery,
+  useGetBankSimpleListQuery,
+} from "@/graphql/generated/graphql";
 import { formatCurrency, getDisplayColor } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -14,6 +30,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Plus } from "lucide-react";
 import { format, parseISO } from "date-fns";
 
 const ACCOUNT_TYPE_LABELS: Record<string, string> = {
@@ -27,8 +44,10 @@ const ACCOUNT_TYPE_LABELS: Record<string, string> = {
 };
 
 export function AccountsPage() {
-  const [bankFilter, setBankFilter] = useState<string>("all");
+  const [searchParams] = useSearchParams();
+  const [bankFilter, setBankFilter] = useState<string>(searchParams.get("bank") ?? "all");
   const [activeFilter, setActiveFilter] = useState<string>("active");
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const { data: bankData } = useGetBankSimpleListQuery();
 
@@ -37,7 +56,7 @@ export function AccountsPage() {
       ? null
       : { exact: activeFilter === "active", inList: null, isNull: null };
 
-  const { data, loading, error } = useGetAccountListQuery({
+  const { data, loading, error, refetch } = useGetAccountListQuery({
     variables: {
       after: "",
       bankId: bankFilter === "all" ? null : bankFilter,
@@ -48,6 +67,13 @@ export function AccountsPage() {
   const navigate = useNavigate();
   const accounts = data?.accountRelay?.edges ?? [];
   const banks = bankData?.bankRelay?.edges ?? [];
+
+  // 통화별 잔액 합계
+  const balanceByCurrency = accounts.reduce<Record<string, number>>((acc, edge) => {
+    const { currency, amount } = edge.node;
+    acc[currency] = (acc[currency] ?? 0) + parseFloat(amount);
+    return acc;
+  }, {});
 
   if (error) {
     return (
@@ -60,13 +86,19 @@ export function AccountsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Accounts</h1>
-        <Badge variant="outline">{data?.accountRelay?.totalCount ?? 0} total</Badge>
+        <div className="flex items-center gap-3">
+          <h1 className="text-3xl font-bold tracking-tight">Accounts</h1>
+          <Badge variant="outline">{data?.accountRelay?.totalCount ?? 0} total</Badge>
+        </div>
+        <Button size="sm" className="gap-2" onClick={() => setDialogOpen(true)}>
+          <Plus className="h-4 w-4" />
+          계좌 추가
+        </Button>
       </div>
 
       {/* Filters */}
       <Card>
-        <CardContent className="flex gap-4 pt-6">
+        <CardContent className="flex flex-wrap items-center gap-4 pt-6">
           <div className="w-48">
             <Select value={bankFilter} onValueChange={setBankFilter}>
               <SelectTrigger>
@@ -94,6 +126,16 @@ export function AccountsPage() {
               </SelectContent>
             </Select>
           </div>
+          {!loading && Object.keys(balanceByCurrency).length > 0 && (
+            <div className="ml-auto flex items-center gap-4">
+              {Object.entries(balanceByCurrency).map(([currency, total]) => (
+                <div key={currency} className="text-right">
+                  <p className="text-xs text-muted-foreground">{currency} 합계</p>
+                  <p className="text-sm font-bold">{formatCurrency(total.toString(), currency)}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -167,6 +209,16 @@ export function AccountsPage() {
           )}
         </CardContent>
       </Card>
+      <CreateAccountDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        banks={banks}
+        defaultBankId={bankFilter !== "all" ? bankFilter : undefined}
+        onCreated={() => {
+          setDialogOpen(false);
+          void refetch();
+        }}
+      />
     </div>
   );
 }
@@ -177,4 +229,107 @@ function formatDate(dateStr: string): string {
   } catch {
     return dateStr;
   }
+}
+
+function CreateAccountDialog({
+  open,
+  onOpenChange,
+  banks,
+  defaultBankId,
+  onCreated,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  banks: Array<{ node: { id: string; name: string } }>;
+  defaultBankId?: string;
+  onCreated: () => void;
+}) {
+  const [name, setName] = useState("");
+  const [bankId, setBankId] = useState(defaultBankId ?? "");
+  const [type, setType] = useState<AccountType>(AccountType.CheckingAccount);
+  const [currency, setCurrency] = useState<CurrencyType>(CurrencyType.Krw);
+  const [createAccount, { loading }] = useCreateAccountMutation();
+
+  useEffect(() => {
+    if (open) {
+      setName("");
+      setBankId(defaultBankId ?? "");
+      setType(AccountType.CheckingAccount);
+      setCurrency(CurrencyType.Krw);
+    }
+  }, [open, defaultBankId]);
+
+  const handleOpenChange = (next: boolean) => {
+    onOpenChange(next);
+  };
+
+  const handleSubmit = async () => {
+    if (!name.trim() || !bankId) return;
+    await createAccount({ variables: { name: name.trim(), bankId, type, currency } });
+    onCreated();
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>계좌 추가</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-2">
+          <div className="space-y-1.5">
+            <Label>계좌명</Label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="계좌명 입력" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>은행</Label>
+            <Select value={bankId} onValueChange={setBankId}>
+              <SelectTrigger>
+                <SelectValue placeholder="은행 선택" />
+              </SelectTrigger>
+              <SelectContent>
+                {banks.map((b) => (
+                  <SelectItem key={b.node.id} value={b.node.id}>
+                    {b.node.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>종류</Label>
+            <Select value={type} onValueChange={(v) => setType(v as AccountType)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(ACCOUNT_TYPE_LABELS).map(([val, label]) => (
+                  <SelectItem key={val} value={val}>
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>통화</Label>
+            <Select value={currency} onValueChange={(v) => setCurrency(v as CurrencyType)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={CurrencyType.Krw}>KRW</SelectItem>
+                <SelectItem value={CurrencyType.Usd}>USD</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>취소</Button>
+          <Button onClick={handleSubmit} disabled={loading || !name.trim() || !bankId}>
+            {loading ? "저장 중..." : "저장"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 }
