@@ -23,3 +23,15 @@ query GetRetailerType {
     }
   }
 }
+
+query GetAllRetailers {
+  retailerRelay(first: 1000) {
+    edges {
+      node {
+        id
+        name
+        category
+      }
+    }
+  }
+}

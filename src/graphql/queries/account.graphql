@@ -22,6 +22,7 @@ query GetAccountList(
         lastUpdate
         id
         isActive
+        firstAdded
         type
         firstTransaction
         lastTransaction

@@ -39,7 +39,7 @@ import {
 } from "@/components/ui/table";
 import { ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight, Circle, Pencil, Plus, RefreshCw } from "lucide-react";
 import { format, parseISO } from "date-fns";
-import { CreateTransactionDialog } from "@/features/transactions/create-transaction-dialog";
+import { BulkTransactionForm } from "@/features/transactions/bulk-transaction-form";
 
 const PAGE_SIZE = 50;
 
@@ -70,7 +70,7 @@ async function toggleReviewed(pk: string): Promise<void> {
 export function AccountDetailPage() {
   const { accountId } = useParams<{ accountId: string }>();
   const navigate = useNavigate();
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showUnreviewedOnly, setShowUnreviewedOnly] = useState(false);
   const [toggling, setToggling] = useState<Set<string>>(new Set());
@@ -225,6 +225,20 @@ export function AccountDetailPage() {
         </div>
       )}
 
+      {showForm && decodedId && (
+        <BulkTransactionForm
+          accountId={decodedId}
+          currency={currency}
+          defaultDate={account?.lastTransaction ?? new Date().toISOString().slice(0, 10)}
+          onSuccess={() => {
+            setShowForm(false);
+            refetchTransactions();
+            refetchAccount();
+          }}
+          onCancel={() => setShowForm(false)}
+        />
+      )}
+
       {/* Transactions */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
@@ -240,7 +254,7 @@ export function AccountDetailPage() {
                 미검토만
               </Label>
             </div>
-            <Button size="sm" onClick={() => setShowCreateDialog(true)}>
+            <Button size="sm" onClick={() => setShowForm(true)}>
               <Plus className="mr-1 h-4 w-4" />
               거래 추가
             </Button>
@@ -366,19 +380,6 @@ export function AccountDetailPage() {
           )}
         </CardContent>
       </Card>
-
-      {showCreateDialog && decodedId && (
-        <CreateTransactionDialog
-          accountId={decodedId}
-          currency={currency}
-          open={showCreateDialog}
-          onOpenChange={setShowCreateDialog}
-          onSuccess={() => {
-            refetchTransactions();
-            setShowCreateDialog(false);
-          }}
-        />
-      )}
 
       {account && (
         <EditAccountDialog

@@ -122,6 +122,53 @@ query GetLastTransactionDate {
   }
 }
 
+mutation CreateTransactionFull(
+  $amount: Decimal!
+  $date: Date!
+  $accountId: ID!
+  $type: TransactionCategory
+  $retailerId: ID
+  $isInternal: Boolean
+  $note: String
+) {
+  createTransaction(
+    data: {
+      amount: $amount
+      date: $date
+      account: { set: $accountId }
+      type: $type
+      retailer: { set: $retailerId }
+      isInternal: $isInternal
+      note: $note
+    }
+  ) {
+    id
+    amount
+    date
+    type
+    isInternal
+    retailer {
+      id
+      name
+    }
+  }
+}
+
+query GetLastTransactionDateForAccount($accountId: ID) {
+  transactionRelay(
+    filters: { account: { bank: {}, id: { exact: $accountId } } }
+    order: { id: DESC }
+    first: 1
+  ) {
+    edges {
+      node {
+        id
+        date
+      }
+    }
+  }
+}
+
 query GetUnreviewedTransactions($first: Int!, $after: String!, $dateGte: Date, $dateLte: Date) {
   transactionRelay(
     first: $first
@@ -193,5 +240,40 @@ query GetTransaction($id: ID) {
         }
       }
     }
+  }
+}
+
+query GetInternalTransactions($after: String!) {
+  transactionRelay(
+    filters: { account: { bank: {} }, isInternal: { exact: true } }
+    order: { date: DESC }
+    first: 100
+    after: $after
+  ) {
+    edges {
+      node {
+        id
+        date
+        amount
+        type
+        isInternal
+        retailer { id name }
+        account { id name currency bank { name } }
+      }
+    }
+    pageInfo { hasNextPage endCursor }
+    totalCount
+  }
+}
+
+query GetAccountMonthCount($accountId: ID, $dateGte: Date, $dateLte: Date) {
+  transactionRelay(
+    filters: {
+      account: { bank: {}, id: { exact: $accountId } }
+      date: { gte: $dateGte, lte: $dateLte }
+    }
+    first: 1
+  ) {
+    totalCount
   }
 }

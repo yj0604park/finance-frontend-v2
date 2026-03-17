@@ -1118,7 +1118,9 @@ export type TransactionFilter = {
   account: AccountFilter;
   date: InputMaybe<DateDateFilterLookup>;
   id: InputMaybe<IdBaseFilterLookup>;
+  isInternal: InputMaybe<BoolBaseFilterLookup>;
   reviewed: InputMaybe<BoolBaseFilterLookup>;
+  type: InputMaybe<TransactionCategoryFilterLookup>;
 };
 
 export type TransactionInput = {
@@ -1357,7 +1359,7 @@ export type GetAccountListQueryVariables = Exact<{
 }>;
 
 
-export type GetAccountListQuery = { __typename?: 'Query', accountRelay: { __typename?: 'AccountNodeConnection', totalCount: number | null, edges: Array<{ __typename?: 'AccountNodeEdge', cursor: string, node: { __typename?: 'AccountNode', amount: string, name: string, currency: CurrencyType, lastUpdate: string | null, id: string, isActive: boolean, type: AccountType, firstTransaction: string | null, lastTransaction: string | null, bank: { __typename?: 'BankNode', id: string, name: string } } }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, hasPreviousPage: boolean, startCursor: string | null, endCursor: string | null } } };
+export type GetAccountListQuery = { __typename?: 'Query', accountRelay: { __typename?: 'AccountNodeConnection', totalCount: number | null, edges: Array<{ __typename?: 'AccountNodeEdge', cursor: string, node: { __typename?: 'AccountNode', amount: string, name: string, currency: CurrencyType, lastUpdate: string | null, id: string, isActive: boolean, firstAdded: boolean, type: AccountType, firstTransaction: string | null, lastTransaction: string | null, bank: { __typename?: 'BankNode', id: string, name: string } } }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, hasPreviousPage: boolean, startCursor: string | null, endCursor: string | null } } };
 
 export type GetSimpleAccountListQueryVariables = Exact<{
   bankId: InputMaybe<Scalars['ID']['input']>;
@@ -1446,6 +1448,11 @@ export type GetRetailerTypeQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type GetRetailerTypeQuery = { __typename?: 'Query', __type: { __typename?: '__Type', name: string | null, enumValues: Array<{ __typename?: '__EnumValue', name: string }> | null } | null };
+
+export type GetAllRetailersQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetAllRetailersQuery = { __typename?: 'Query', retailerRelay: { __typename?: 'RetailerNodeConnection', edges: Array<{ __typename?: 'RetailerNodeEdge', node: { __typename?: 'RetailerNode', id: string, name: string, category: TransactionCategory } }> } };
 
 export type GetSalaryListQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1559,6 +1566,26 @@ export type GetLastTransactionDateQueryVariables = Exact<{ [key: string]: never;
 
 export type GetLastTransactionDateQuery = { __typename?: 'Query', transactionRelay: { __typename?: 'TransactionNodeConnection', edges: Array<{ __typename?: 'TransactionNodeEdge', node: { __typename?: 'TransactionNode', date: string } }> } };
 
+export type CreateTransactionFullMutationVariables = Exact<{
+  amount: Scalars['Decimal']['input'];
+  date: Scalars['Date']['input'];
+  accountId: Scalars['ID']['input'];
+  type: InputMaybe<TransactionCategory>;
+  retailerId: InputMaybe<Scalars['ID']['input']>;
+  isInternal: InputMaybe<Scalars['Boolean']['input']>;
+  note: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type CreateTransactionFullMutation = { __typename?: 'Mutation', createTransaction: { __typename?: 'TransactionNode', id: string, amount: string, date: string, type: TransactionCategory, isInternal: boolean, retailer: { __typename?: 'RetailerNode', id: string, name: string } | null } };
+
+export type GetLastTransactionDateForAccountQueryVariables = Exact<{
+  accountId: InputMaybe<Scalars['ID']['input']>;
+}>;
+
+
+export type GetLastTransactionDateForAccountQuery = { __typename?: 'Query', transactionRelay: { __typename?: 'TransactionNodeConnection', edges: Array<{ __typename?: 'TransactionNodeEdge', node: { __typename?: 'TransactionNode', id: string, date: string } }> } };
+
 export type GetUnreviewedTransactionsQueryVariables = Exact<{
   first: Scalars['Int']['input'];
   after: Scalars['String']['input'];
@@ -1575,6 +1602,22 @@ export type GetTransactionQueryVariables = Exact<{
 
 
 export type GetTransactionQuery = { __typename?: 'Query', transactionRelay: { __typename?: 'TransactionNodeConnection', edges: Array<{ __typename?: 'TransactionNodeEdge', node: { __typename?: 'TransactionNode', id: string, amount: string, balance: string | null, date: string, isInternal: boolean, reviewed: boolean, requiresDetail: boolean, type: TransactionCategory, note: string | null, retailer: { __typename?: 'RetailerNode', id: string, name: string } | null, account: { __typename?: 'AccountNode', id: string, name: string, currency: CurrencyType, bank: { __typename?: 'BankNode', name: string } } } }> } };
+
+export type GetInternalTransactionsQueryVariables = Exact<{
+  after: Scalars['String']['input'];
+}>;
+
+
+export type GetInternalTransactionsQuery = { __typename?: 'Query', transactionRelay: { __typename?: 'TransactionNodeConnection', totalCount: number | null, edges: Array<{ __typename?: 'TransactionNodeEdge', node: { __typename?: 'TransactionNode', id: string, date: string, amount: string, type: TransactionCategory, isInternal: boolean, retailer: { __typename?: 'RetailerNode', id: string, name: string } | null, account: { __typename?: 'AccountNode', id: string, name: string, currency: CurrencyType, bank: { __typename?: 'BankNode', name: string } } } }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor: string | null } } };
+
+export type GetAccountMonthCountQueryVariables = Exact<{
+  accountId: InputMaybe<Scalars['ID']['input']>;
+  dateGte: InputMaybe<Scalars['Date']['input']>;
+  dateLte: InputMaybe<Scalars['Date']['input']>;
+}>;
+
+
+export type GetAccountMonthCountQuery = { __typename?: 'Query', transactionRelay: { __typename?: 'TransactionNodeConnection', totalCount: number | null } };
 
 
 export const CreateRetailerDocument = gql`
@@ -1824,6 +1867,7 @@ export const GetAccountListDocument = gql`
         lastUpdate
         id
         isActive
+        firstAdded
         type
         firstTransaction
         lastTransaction
@@ -2511,6 +2555,54 @@ export type GetRetailerTypeQueryHookResult = ReturnType<typeof useGetRetailerTyp
 export type GetRetailerTypeLazyQueryHookResult = ReturnType<typeof useGetRetailerTypeLazyQuery>;
 export type GetRetailerTypeSuspenseQueryHookResult = ReturnType<typeof useGetRetailerTypeSuspenseQuery>;
 export type GetRetailerTypeQueryResult = Apollo.QueryResult<GetRetailerTypeQuery, GetRetailerTypeQueryVariables>;
+export const GetAllRetailersDocument = gql`
+    query GetAllRetailers {
+  retailerRelay(first: 1000) {
+    edges {
+      node {
+        id
+        name
+        category
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetAllRetailersQuery__
+ *
+ * To run a query within a React component, call `useGetAllRetailersQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetAllRetailersQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetAllRetailersQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useGetAllRetailersQuery(baseOptions?: Apollo.QueryHookOptions<GetAllRetailersQuery, GetAllRetailersQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetAllRetailersQuery, GetAllRetailersQueryVariables>(GetAllRetailersDocument, options);
+      }
+export function useGetAllRetailersLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetAllRetailersQuery, GetAllRetailersQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetAllRetailersQuery, GetAllRetailersQueryVariables>(GetAllRetailersDocument, options);
+        }
+// @ts-ignore
+export function useGetAllRetailersSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<GetAllRetailersQuery, GetAllRetailersQueryVariables>): Apollo.UseSuspenseQueryResult<GetAllRetailersQuery, GetAllRetailersQueryVariables>;
+export function useGetAllRetailersSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetAllRetailersQuery, GetAllRetailersQueryVariables>): Apollo.UseSuspenseQueryResult<GetAllRetailersQuery | undefined, GetAllRetailersQueryVariables>;
+export function useGetAllRetailersSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetAllRetailersQuery, GetAllRetailersQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetAllRetailersQuery, GetAllRetailersQueryVariables>(GetAllRetailersDocument, options);
+        }
+export type GetAllRetailersQueryHookResult = ReturnType<typeof useGetAllRetailersQuery>;
+export type GetAllRetailersLazyQueryHookResult = ReturnType<typeof useGetAllRetailersLazyQuery>;
+export type GetAllRetailersSuspenseQueryHookResult = ReturnType<typeof useGetAllRetailersSuspenseQuery>;
+export type GetAllRetailersQueryResult = Apollo.QueryResult<GetAllRetailersQuery, GetAllRetailersQueryVariables>;
 export const GetSalaryListDocument = gql`
     query GetSalaryList {
   salaryRelay(order: {date: ASC}) {
@@ -3329,6 +3421,107 @@ export type GetLastTransactionDateQueryHookResult = ReturnType<typeof useGetLast
 export type GetLastTransactionDateLazyQueryHookResult = ReturnType<typeof useGetLastTransactionDateLazyQuery>;
 export type GetLastTransactionDateSuspenseQueryHookResult = ReturnType<typeof useGetLastTransactionDateSuspenseQuery>;
 export type GetLastTransactionDateQueryResult = Apollo.QueryResult<GetLastTransactionDateQuery, GetLastTransactionDateQueryVariables>;
+export const CreateTransactionFullDocument = gql`
+    mutation CreateTransactionFull($amount: Decimal!, $date: Date!, $accountId: ID!, $type: TransactionCategory, $retailerId: ID, $isInternal: Boolean, $note: String) {
+  createTransaction(
+    data: {amount: $amount, date: $date, account: {set: $accountId}, type: $type, retailer: {set: $retailerId}, isInternal: $isInternal, note: $note}
+  ) {
+    id
+    amount
+    date
+    type
+    isInternal
+    retailer {
+      id
+      name
+    }
+  }
+}
+    `;
+export type CreateTransactionFullMutationFn = Apollo.MutationFunction<CreateTransactionFullMutation, CreateTransactionFullMutationVariables>;
+
+/**
+ * __useCreateTransactionFullMutation__
+ *
+ * To run a mutation, you first call `useCreateTransactionFullMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateTransactionFullMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createTransactionFullMutation, { data, loading, error }] = useCreateTransactionFullMutation({
+ *   variables: {
+ *      amount: // value for 'amount'
+ *      date: // value for 'date'
+ *      accountId: // value for 'accountId'
+ *      type: // value for 'type'
+ *      retailerId: // value for 'retailerId'
+ *      isInternal: // value for 'isInternal'
+ *      note: // value for 'note'
+ *   },
+ * });
+ */
+export function useCreateTransactionFullMutation(baseOptions?: Apollo.MutationHookOptions<CreateTransactionFullMutation, CreateTransactionFullMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateTransactionFullMutation, CreateTransactionFullMutationVariables>(CreateTransactionFullDocument, options);
+      }
+export type CreateTransactionFullMutationHookResult = ReturnType<typeof useCreateTransactionFullMutation>;
+export type CreateTransactionFullMutationResult = Apollo.MutationResult<CreateTransactionFullMutation>;
+export type CreateTransactionFullMutationOptions = Apollo.BaseMutationOptions<CreateTransactionFullMutation, CreateTransactionFullMutationVariables>;
+export const GetLastTransactionDateForAccountDocument = gql`
+    query GetLastTransactionDateForAccount($accountId: ID) {
+  transactionRelay(
+    filters: {account: {bank: {}, id: {exact: $accountId}}}
+    order: {id: DESC}
+    first: 1
+  ) {
+    edges {
+      node {
+        id
+        date
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetLastTransactionDateForAccountQuery__
+ *
+ * To run a query within a React component, call `useGetLastTransactionDateForAccountQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetLastTransactionDateForAccountQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetLastTransactionDateForAccountQuery({
+ *   variables: {
+ *      accountId: // value for 'accountId'
+ *   },
+ * });
+ */
+export function useGetLastTransactionDateForAccountQuery(baseOptions?: Apollo.QueryHookOptions<GetLastTransactionDateForAccountQuery, GetLastTransactionDateForAccountQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetLastTransactionDateForAccountQuery, GetLastTransactionDateForAccountQueryVariables>(GetLastTransactionDateForAccountDocument, options);
+      }
+export function useGetLastTransactionDateForAccountLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetLastTransactionDateForAccountQuery, GetLastTransactionDateForAccountQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetLastTransactionDateForAccountQuery, GetLastTransactionDateForAccountQueryVariables>(GetLastTransactionDateForAccountDocument, options);
+        }
+// @ts-ignore
+export function useGetLastTransactionDateForAccountSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<GetLastTransactionDateForAccountQuery, GetLastTransactionDateForAccountQueryVariables>): Apollo.UseSuspenseQueryResult<GetLastTransactionDateForAccountQuery, GetLastTransactionDateForAccountQueryVariables>;
+export function useGetLastTransactionDateForAccountSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetLastTransactionDateForAccountQuery, GetLastTransactionDateForAccountQueryVariables>): Apollo.UseSuspenseQueryResult<GetLastTransactionDateForAccountQuery | undefined, GetLastTransactionDateForAccountQueryVariables>;
+export function useGetLastTransactionDateForAccountSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetLastTransactionDateForAccountQuery, GetLastTransactionDateForAccountQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetLastTransactionDateForAccountQuery, GetLastTransactionDateForAccountQueryVariables>(GetLastTransactionDateForAccountDocument, options);
+        }
+export type GetLastTransactionDateForAccountQueryHookResult = ReturnType<typeof useGetLastTransactionDateForAccountQuery>;
+export type GetLastTransactionDateForAccountLazyQueryHookResult = ReturnType<typeof useGetLastTransactionDateForAccountLazyQuery>;
+export type GetLastTransactionDateForAccountSuspenseQueryHookResult = ReturnType<typeof useGetLastTransactionDateForAccountSuspenseQuery>;
+export type GetLastTransactionDateForAccountQueryResult = Apollo.QueryResult<GetLastTransactionDateForAccountQuery, GetLastTransactionDateForAccountQueryVariables>;
 export const GetUnreviewedTransactionsDocument = gql`
     query GetUnreviewedTransactions($first: Int!, $after: String!, $dateGte: Date, $dateLte: Date) {
   transactionRelay(
@@ -3476,3 +3669,124 @@ export type GetTransactionQueryHookResult = ReturnType<typeof useGetTransactionQ
 export type GetTransactionLazyQueryHookResult = ReturnType<typeof useGetTransactionLazyQuery>;
 export type GetTransactionSuspenseQueryHookResult = ReturnType<typeof useGetTransactionSuspenseQuery>;
 export type GetTransactionQueryResult = Apollo.QueryResult<GetTransactionQuery, GetTransactionQueryVariables>;
+export const GetInternalTransactionsDocument = gql`
+    query GetInternalTransactions($after: String!) {
+  transactionRelay(
+    filters: {account: {bank: {}}, isInternal: {exact: true}}
+    order: {date: DESC}
+    first: 100
+    after: $after
+  ) {
+    edges {
+      node {
+        id
+        date
+        amount
+        type
+        isInternal
+        retailer {
+          id
+          name
+        }
+        account {
+          id
+          name
+          currency
+          bank {
+            name
+          }
+        }
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+    totalCount
+  }
+}
+    `;
+
+/**
+ * __useGetInternalTransactionsQuery__
+ *
+ * To run a query within a React component, call `useGetInternalTransactionsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetInternalTransactionsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetInternalTransactionsQuery({
+ *   variables: {
+ *      after: // value for 'after'
+ *   },
+ * });
+ */
+export function useGetInternalTransactionsQuery(baseOptions: Apollo.QueryHookOptions<GetInternalTransactionsQuery, GetInternalTransactionsQueryVariables> & ({ variables: GetInternalTransactionsQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetInternalTransactionsQuery, GetInternalTransactionsQueryVariables>(GetInternalTransactionsDocument, options);
+      }
+export function useGetInternalTransactionsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetInternalTransactionsQuery, GetInternalTransactionsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetInternalTransactionsQuery, GetInternalTransactionsQueryVariables>(GetInternalTransactionsDocument, options);
+        }
+// @ts-ignore
+export function useGetInternalTransactionsSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<GetInternalTransactionsQuery, GetInternalTransactionsQueryVariables>): Apollo.UseSuspenseQueryResult<GetInternalTransactionsQuery, GetInternalTransactionsQueryVariables>;
+export function useGetInternalTransactionsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetInternalTransactionsQuery, GetInternalTransactionsQueryVariables>): Apollo.UseSuspenseQueryResult<GetInternalTransactionsQuery | undefined, GetInternalTransactionsQueryVariables>;
+export function useGetInternalTransactionsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetInternalTransactionsQuery, GetInternalTransactionsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetInternalTransactionsQuery, GetInternalTransactionsQueryVariables>(GetInternalTransactionsDocument, options);
+        }
+export type GetInternalTransactionsQueryHookResult = ReturnType<typeof useGetInternalTransactionsQuery>;
+export type GetInternalTransactionsLazyQueryHookResult = ReturnType<typeof useGetInternalTransactionsLazyQuery>;
+export type GetInternalTransactionsSuspenseQueryHookResult = ReturnType<typeof useGetInternalTransactionsSuspenseQuery>;
+export type GetInternalTransactionsQueryResult = Apollo.QueryResult<GetInternalTransactionsQuery, GetInternalTransactionsQueryVariables>;
+export const GetAccountMonthCountDocument = gql`
+    query GetAccountMonthCount($accountId: ID, $dateGte: Date, $dateLte: Date) {
+  transactionRelay(
+    filters: {account: {bank: {}, id: {exact: $accountId}}, date: {gte: $dateGte, lte: $dateLte}}
+    first: 1
+  ) {
+    totalCount
+  }
+}
+    `;
+
+/**
+ * __useGetAccountMonthCountQuery__
+ *
+ * To run a query within a React component, call `useGetAccountMonthCountQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetAccountMonthCountQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetAccountMonthCountQuery({
+ *   variables: {
+ *      accountId: // value for 'accountId'
+ *      dateGte: // value for 'dateGte'
+ *      dateLte: // value for 'dateLte'
+ *   },
+ * });
+ */
+export function useGetAccountMonthCountQuery(baseOptions?: Apollo.QueryHookOptions<GetAccountMonthCountQuery, GetAccountMonthCountQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetAccountMonthCountQuery, GetAccountMonthCountQueryVariables>(GetAccountMonthCountDocument, options);
+      }
+export function useGetAccountMonthCountLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetAccountMonthCountQuery, GetAccountMonthCountQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetAccountMonthCountQuery, GetAccountMonthCountQueryVariables>(GetAccountMonthCountDocument, options);
+        }
+// @ts-ignore
+export function useGetAccountMonthCountSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<GetAccountMonthCountQuery, GetAccountMonthCountQueryVariables>): Apollo.UseSuspenseQueryResult<GetAccountMonthCountQuery, GetAccountMonthCountQueryVariables>;
+export function useGetAccountMonthCountSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetAccountMonthCountQuery, GetAccountMonthCountQueryVariables>): Apollo.UseSuspenseQueryResult<GetAccountMonthCountQuery | undefined, GetAccountMonthCountQueryVariables>;
+export function useGetAccountMonthCountSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetAccountMonthCountQuery, GetAccountMonthCountQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetAccountMonthCountQuery, GetAccountMonthCountQueryVariables>(GetAccountMonthCountDocument, options);
+        }
+export type GetAccountMonthCountQueryHookResult = ReturnType<typeof useGetAccountMonthCountQuery>;
+export type GetAccountMonthCountLazyQueryHookResult = ReturnType<typeof useGetAccountMonthCountLazyQuery>;
+export type GetAccountMonthCountSuspenseQueryHookResult = ReturnType<typeof useGetAccountMonthCountSuspenseQuery>;
+export type GetAccountMonthCountQueryResult = Apollo.QueryResult<GetAccountMonthCountQuery, GetAccountMonthCountQueryVariables>;
