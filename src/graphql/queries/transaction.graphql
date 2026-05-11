@@ -266,6 +266,36 @@ query GetInternalTransactions($after: String!) {
   }
 }
 
+query GetUnlinkedStockTransactions($accountId: ID, $after: String!) {
+  transactionRelay(
+    filters: {
+      account: { bank: {}, id: { exact: $accountId } }
+      type: { exact: STOCK }
+    }
+    order: { date: DESC }
+    first: 100
+    after: $after
+  ) {
+    edges {
+      node {
+        id
+        date
+        amount
+        note
+        account {
+          id
+          currency
+        }
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+    totalCount
+  }
+}
+
 query GetAccountMonthCount($accountId: ID, $dateGte: Date, $dateLte: Date) {
   transactionRelay(
     filters: {
@@ -275,5 +305,33 @@ query GetAccountMonthCount($accountId: ID, $dateGte: Date, $dateLte: Date) {
     first: 1
   ) {
     totalCount
+  }
+}
+
+mutation UpdateTransaction(
+  $id: ID!
+  $type: TransactionCategory
+  $retailerId: ID
+  $note: String
+  $isInternal: Boolean
+) {
+  updateTransaction(
+    data: {
+      id: $id
+      type: $type
+      retailer: { set: $retailerId }
+      note: $note
+      isInternal: $isInternal
+    }
+  ) {
+    id
+    type
+    retailer {
+      id
+      name
+    }
+    note
+    isInternal
+    reviewed
   }
 }

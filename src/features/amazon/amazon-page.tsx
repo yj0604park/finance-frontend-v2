@@ -5,7 +5,7 @@ import {
   useCreateAmazonOrderMutation,
   useGetAllTransactionsQuery,
 } from "@/graphql/generated/graphql";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatDate } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -197,7 +197,7 @@ export function AmazonPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Amazon Orders</h1>
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Amazon Orders</h1>
           <p className="text-muted-foreground mt-1 text-sm">
             Amazon 주문 내역 관리
           </p>
@@ -288,7 +288,7 @@ export function AmazonPage() {
                     return (
                       <TableRow key={order.id}>
                         <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                          {format(parseISO(order.date), "yyyy-MM-dd")}
+                          {formatDate(order.date)}
                         </TableCell>
                         <TableCell className="text-sm font-medium max-w-xs">
                           {order.item}

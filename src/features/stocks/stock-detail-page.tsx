@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import {
   useGetStockListQuery,
   useGetStockPricesQuery,
   useCreateStockPriceMutation,
   CurrencyType,
 } from "@/graphql/generated/graphql";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatDate } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -114,7 +114,7 @@ export function StockDetailPage() {
         </Button>
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold tracking-tight">
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
               {stock.ticker ?? stock.name}
             </h1>
             <Badge
@@ -160,7 +160,7 @@ export function StockDetailPage() {
               <div>
                 <p className="text-muted-foreground text-xs">최근 기록일</p>
                 <p className="text-xl font-bold">
-                  {latestRecord ? format(parseISO(latestRecord.date), "yyyy-MM-dd") : "—"}
+                  {latestRecord ? formatDate(latestRecord.date) : "—"}
                 </p>
               </div>
             </div>
@@ -307,7 +307,7 @@ export function StockDetailPage() {
                     return (
                       <TableRow key={rec.id}>
                         <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                          {format(parseISO(rec.date), "yyyy-MM-dd")}
+                          {formatDate(rec.date)}
                         </TableCell>
                         <TableCell className="text-sm font-mono text-right">
                           {formatCurrency(rec.price, stock.currency)}

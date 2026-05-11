@@ -137,7 +137,7 @@ export function RetailersPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Retailers</h1>
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Retailers</h1>
           <p className="text-muted-foreground mt-1 text-sm">가맹점별 지출 분석</p>
         </div>
         <div className="flex items-center gap-3">
@@ -174,7 +174,7 @@ export function RetailersPage() {
         </CardContent>
       </Card>
 
-      {loading ? (
+      {loading && retailerSummary.length === 0 ? (
         <div className="space-y-4">
           <Skeleton className="h-64 w-full" />
           <Skeleton className="h-96 w-full" />

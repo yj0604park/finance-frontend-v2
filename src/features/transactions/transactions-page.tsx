@@ -1,230 +1,172 @@
-import { useState } from "react";
-import { format, parseISO } from "date-fns";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useApolloClient } from "@apollo/client";
 import {
-  useGetAllTransactionsQuery,
+  GetAllTransactionsDocument,
+  type GetAllTransactionsQuery,
+  type GetAllTransactionsQueryVariables,
   useGetSimpleAccountListQuery,
 } from "@/graphql/generated/graphql";
-import { formatCurrency, getDisplayColor } from "@/lib/format";
-import { CATEGORY_LABELS } from "@/lib/constants";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DateRangeFilter } from "@/components/shared/date-range-filter";
+import { ErrorAlert } from "@/components/shared/error-alert";
+import { TransactionTable } from "@/components/shared/transaction-table";
+import { PaginationControls } from "@/components/shared/pagination-controls";
 
-const PAGE_SIZE = 50;
+const PAGE_SIZE = 10;
+const FETCH_BATCH = 100;
+
+type TxEdge = GetAllTransactionsQuery["transactionRelay"]["edges"][number];
 
 export function TransactionsPage() {
   const navigate = useNavigate();
+  const client = useApolloClient();
   const [accountFilter, setAccountFilter] = useState<string>("all");
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
-  const [cursor, setCursor] = useState<string>("");
-  const [cursorStack, setCursorStack] = useState<string[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const [allEdges, setAllEdges] = useState<TxEdge[]>([]);
+  const [loadingMore, setLoadingMore] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
   const { data: accountData } = useGetSimpleAccountListQuery();
   const accounts = accountData?.accountRelay?.edges ?? [];
 
-  const { data, loading, error } = useGetAllTransactionsQuery({
-    variables: {
-      first: PAGE_SIZE,
-      after: cursor,
-      accountId: accountFilter === "all" ? null : accountFilter,
-      dateGte: startDate || null,
-      dateLte: endDate || null,
-    },
-  });
+  const filterKey = `${accountFilter}|${startDate}|${endDate}`;
+  const filterKeyRef = useRef(filterKey);
 
-  const transactions = data?.transactionRelay?.edges ?? [];
-  const pageInfo = data?.transactionRelay?.pageInfo;
-  const totalCount = data?.transactionRelay?.totalCount ?? 0;
+  useEffect(() => {
+    filterKeyRef.current = filterKey;
+    let cancelled = false;
+    setAllEdges([]);
+    setLoadingMore(true);
+    setError(null);
+    setCurrentPage(1);
 
-  function handleNext() {
-    if (pageInfo?.endCursor) {
-      setCursorStack((prev) => [...prev, cursor]);
-      setCursor(pageInfo.endCursor ?? "");
+    async function fetchAll() {
+      const accumulated: TxEdge[] = [];
+      let cursor = "";
+      let hasNext = true;
+
+      try {
+        while (hasNext) {
+          const result = await client.query<GetAllTransactionsQuery, GetAllTransactionsQueryVariables>({
+            query: GetAllTransactionsDocument,
+            variables: {
+              first: FETCH_BATCH,
+              after: cursor,
+              accountId: accountFilter === "all" ? null : accountFilter,
+              dateGte: startDate || null,
+              dateLte: endDate || null,
+            },
+            fetchPolicy: "cache-first",
+          });
+          if (cancelled || filterKeyRef.current !== filterKey) return;
+
+          accumulated.push(...result.data.transactionRelay.edges);
+          setAllEdges([...accumulated]); // show data progressively
+          hasNext = result.data.transactionRelay.pageInfo.hasNextPage;
+          cursor = result.data.transactionRelay.pageInfo.endCursor ?? "";
+          if (!cursor) break;
+        }
+      } catch (e) {
+        if (!cancelled) setError(e instanceof Error ? e : new Error(String(e)));
+      } finally {
+        if (!cancelled) setLoadingMore(false);
+      }
     }
-  }
 
-  function handlePrev() {
-    const stack = [...cursorStack];
-    const prev = stack.pop() ?? "";
-    setCursorStack(stack);
-    setCursor(prev);
-  }
+    void fetchAll();
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterKey]);
 
-  function handleFilterChange() {
-    setCursor("");
-    setCursorStack([]);
-  }
-
-  const currentPage = cursorStack.length + 1;
+  const totalCount = allEdges.length;
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  const pagedTransactions = allEdges.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  // While loading, show skeleton only if we have no data yet
+  const showSkeleton = loadingMore && totalCount === 0;
 
   if (error) {
-    return (
-      <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-destructive">
-        Failed to load transactions: {error.message}
-      </div>
-    );
+    return <ErrorAlert error={error} prefix="Failed to load transactions" />;
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Transactions</h1>
-        <Badge variant="outline">{totalCount} total</Badge>
+        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Transactions</h1>
+        <div className="flex items-center gap-2">
+          {loadingMore && totalCount > 0 && (
+            <span className="text-xs text-muted-foreground animate-pulse">{totalCount}건 로딩 중…</span>
+          )}
+          <Badge variant="outline">{totalCount} total</Badge>
+        </div>
       </div>
 
       {/* Filters */}
-      <Card>
-        <CardContent className="flex flex-wrap gap-4 pt-6">
-          <div className="w-52">
-            <Select
-              value={accountFilter}
-              onValueChange={(v) => { setAccountFilter(v); handleFilterChange(); }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="All Accounts" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Accounts</SelectItem>
-                {accounts.map((edge) => (
-                  <SelectItem key={edge.node.id} value={edge.node.id}>
-                    {edge.node.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex items-center gap-2">
-            <Input
-              type="date"
-              value={startDate}
-              onChange={(e) => { setStartDate(e.target.value); handleFilterChange(); }}
-              className="w-40"
-            />
-            <span className="text-muted-foreground text-sm">~</span>
-            <Input
-              type="date"
-              value={endDate}
-              onChange={(e) => { setEndDate(e.target.value); handleFilterChange(); }}
-              className="w-40"
-            />
-          </div>
-        </CardContent>
-      </Card>
+      <DateRangeFilter
+        startDate={startDate}
+        endDate={endDate}
+        onStartChange={(v) => { setStartDate(v); }}
+        onEndChange={(v) => { setEndDate(v); }}
+      >
+        <div className="w-full sm:w-52">
+          <Select
+            value={accountFilter}
+            onValueChange={(v) => { setAccountFilter(v); }}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="All Accounts" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Accounts</SelectItem>
+              {accounts.map((edge) => (
+                <SelectItem key={edge.node.id} value={edge.node.id}>
+                  {edge.node.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </DateRangeFilter>
 
       {/* Table */}
       <Card>
-        <CardContent className="p-0">
-          {loading ? (
-            <div className="space-y-2 p-6">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <Skeleton key={`skel-${i.toString()}`} className="h-10 w-full" />
-              ))}
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Account</TableHead>
-                  <TableHead>Retailer</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                  <TableHead>Note</TableHead>
-                  <TableHead>Flags</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {transactions.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                      No transactions found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  transactions.map((edge) => {
-                    const tx = edge.node;
-                    const currency = tx.account.currency;
-                    return (
-                      <TableRow
-                        key={tx.id}
-                        className="cursor-pointer hover:bg-muted/50"
-                        onClick={() => navigate(`/transactions/${encodeURIComponent(tx.id)}`)}
-                      >
-                        <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                          {format(parseISO(tx.date), "yyyy-MM-dd")}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          <div className="font-medium">{tx.account.name}</div>
-                          <div className="text-muted-foreground text-xs">{tx.account.bank.name}</div>
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {tx.retailer?.name ?? <span className="text-muted-foreground">—</span>}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="text-xs">
-                            {CATEGORY_LABELS[tx.type] ?? tx.type}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className={`text-right font-mono text-sm ${getDisplayColor(tx.amount)}`}>
-                          {formatCurrency(tx.amount, currency)}
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground max-w-48 truncate">
-                          {tx.note ?? ""}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-1">
-                            {tx.isInternal && (
-                              <Badge variant="secondary" className="text-xs">Internal</Badge>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
+        <TransactionTable
+          transactions={pagedTransactions}
+          loading={showSkeleton}
+          columns={{
+            account: true,
+            accountMobileHidden: true,
+            category: true,
+            categoryMobileHidden: true,
+            note: true,
+            noteMobileHidden: true,
+            flags: true,
+            flagsMobileHidden: true,
+          }}
+          onRowClick={(id) => navigate(`/transactions/${encodeURIComponent(id)}`)}
+          emptyMessage="No transactions found"
+          skeletonRows={8}
+        />
       </Card>
 
       {/* Pagination */}
-      <div className="flex items-center justify-between">
-        <span className="text-sm text-muted-foreground">
-          Page {currentPage} · {transactions.length} of {totalCount}
-        </span>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handlePrev}
-            disabled={cursorStack.length === 0}
-          >
-            Previous
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleNext}
-            disabled={!pageInfo?.hasNextPage}
-          >
-            Next
-          </Button>
-        </div>
-      </div>
+      {totalCount > 0 && (
+        <PaginationControls
+          currentPage={currentPage}
+          totalCount={totalCount}
+          pageSize={PAGE_SIZE}
+          canPrev={currentPage > 1}
+          canNext={currentPage < totalPages}
+          onPrev={() => setCurrentPage((p) => p - 1)}
+          onNext={() => setCurrentPage((p) => p + 1)}
+          onGoToPage={setCurrentPage}
+        />
+      )}
     </div>
   );
 }

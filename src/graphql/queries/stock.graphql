@@ -1,3 +1,45 @@
+query GetStockTransaction($id: ID!) {
+  stockTransactionRelay(
+    filters: { stock: {}, account: { bank: {} }, id: { exact: $id } }
+    first: 1
+  ) {
+    edges {
+      node {
+        id
+        date
+        price
+        amount
+        shares
+        balance
+        note
+        stock {
+          id
+          ticker
+          name
+          currency
+        }
+        account {
+          id
+          name
+          currency
+          bank {
+            name
+          }
+        }
+        relatedTransaction {
+          id
+          date
+          amount
+          type
+          retailer {
+            name
+          }
+        }
+      }
+    }
+  }
+}
+
 query GetStockList {
   stockRelay {
     edges {
@@ -9,6 +51,65 @@ query GetStockList {
       }
     }
     totalCount
+  }
+}
+
+query GetAllStocks {
+  stockRelay(first: 500) {
+    edges {
+      node {
+        id
+        ticker
+        name
+        currency
+      }
+    }
+  }
+}
+
+query GetAccountStockTransactions($accountId: ID, $after: String, $first: Int) {
+  stockTransactionRelay(
+    filters: { stock: {}, account: { bank: {}, id: { exact: $accountId } } }
+    order: { date: DESC }
+    first: $first
+    after: $after
+  ) {
+    edges {
+      node {
+        id
+        date
+        price
+        amount
+        shares
+        balance
+        note
+        stock {
+          id
+          ticker
+          name
+          currency
+        }
+        relatedTransaction {
+          id
+        }
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+    totalCount
+  }
+}
+
+mutation UpdateStockTransaction($id: ID!, $relatedTransactionId: ID) {
+  updateStockTransaction(
+    data: { id: $id, relatedTransaction: { set: $relatedTransactionId } }
+  ) {
+    id
+    relatedTransaction {
+      id
+    }
   }
 }
 

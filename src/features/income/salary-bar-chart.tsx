@@ -59,8 +59,8 @@ export function SalaryBarChart({ data, loading }: SalaryBarChartProps) {
                 }}
               />
               <Legend />
-              <Bar dataKey="grossPay" name="Gross Pay" fill="hsl(var(--chart-1))" radius={[2, 2, 0, 0]} />
-              <Bar dataKey="netPay" name="Net Pay" fill="hsl(var(--chart-2))" radius={[2, 2, 0, 0]} />
+              <Bar dataKey="grossPay" name="Gross Pay" fill="#6366f1" radius={[2, 2, 0, 0]} />
+              <Bar dataKey="netPay" name="Net Pay" fill="#14b8a6" radius={[2, 2, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         )}

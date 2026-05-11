@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useGetSalaryFilteredQuery, type GetSalaryFilteredQuery } from "@/graphql/generated/graphql";
-import { formatAccountingUSD, toNumber } from "@/lib/format";
+import { formatAccountingUSD, formatDate, toNumber } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/table";
 import { ArrowLeft, Pencil, Plus } from "lucide-react";
 import { Decimal } from "decimal.js";
-import { format, parseISO } from "date-fns";
 import { useMemo, useState } from "react";
 import { SalaryBarChart } from "./salary-bar-chart";
 import { EditSalaryDialog } from "./edit-salary-dialog";
@@ -72,7 +71,7 @@ export function IncomeYearDetailPage() {
         <Button variant="ghost" size="icon" onClick={() => navigate("/income")}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <h1 className="text-3xl font-bold tracking-tight">Income {year}</h1>
+        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Income {year}</h1>
         <Badge variant="outline">{salaries.length} pay periods</Badge>
         <Button
           size="sm"
@@ -143,7 +142,7 @@ export function IncomeYearDetailPage() {
                             onClick={() => setExpandedId(isExpanded ? null : s.id)}
                           >
                             <TableCell className="font-medium">
-                              {formatDateSafe(s.date)}
+                              {formatDate(s.date)}
                             </TableCell>
                             <TableCell className="text-right font-mono">
                               {formatAccountingUSD(s.grossPay)}
@@ -273,10 +272,3 @@ function DetailSection({ title, data }: { title: string; data: Record<string, un
   );
 }
 
-function formatDateSafe(dateStr: string): string {
-  try {
-    return format(parseISO(dateStr), "yyyy-MM-dd");
-  } catch {
-    return dateStr;
-  }
-}

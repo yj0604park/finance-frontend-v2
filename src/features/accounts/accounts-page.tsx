@@ -7,7 +7,7 @@ import {
   useGetAccountListQuery,
   useGetBankSimpleListQuery,
 } from "@/graphql/generated/graphql";
-import { formatCurrency, getDisplayColor } from "@/lib/format";
+import { formatCurrency, formatDate, getDisplayColor } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -31,7 +31,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Plus } from "lucide-react";
-import { format, parseISO } from "date-fns";
 
 const ACCOUNT_TYPE_LABELS: Record<string, string> = {
   CHECKING_ACCOUNT: "Checking",
@@ -87,7 +86,7 @@ export function AccountsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h1 className="text-3xl font-bold tracking-tight">Accounts</h1>
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Accounts</h1>
           <Badge variant="outline">{data?.accountRelay?.totalCount ?? 0} total</Badge>
         </div>
         <Button size="sm" className="gap-2" onClick={() => setDialogOpen(true)}>
@@ -223,13 +222,6 @@ export function AccountsPage() {
   );
 }
 
-function formatDate(dateStr: string): string {
-  try {
-    return format(parseISO(dateStr), "yyyy-MM-dd");
-  } catch {
-    return dateStr;
-  }
-}
 
 function CreateAccountDialog({
   open,

@@ -83,6 +83,29 @@ export function toNumber(value: string | number | null | undefined): number {
   }
 }
 
+// ─── Date formatting ──────────────────────────────────────────────────────────
+//
+// Rule: whenever you display a date string (YYYY-MM-DD) from the backend,
+// use formatDate(). It omits the year when it's the current year so the UI
+// stays compact while still being unambiguous for older data.
+//
+// ✓  {formatDate(tx.date)}
+// ✓  {formatDate(account.lastTransaction)}
+// ✗  {tx.date}  ← raw string, always shows full year even when redundant
+
+/**
+ * Format a `YYYY-MM-DD` date string for display.
+ * - Same year as today  →  `MM-DD`          e.g. "05-10"
+ * - Different year      →  `YYYY-MM-DD`     e.g. "2024-01-01"
+ * - null / undefined    →  `"—"`
+ */
+export function formatDate(dateStr: string | null | undefined): string {
+  if (!dateStr) return "—";
+  const currentYear = new Date().getFullYear();
+  const year = Number(dateStr.slice(0, 4));
+  return year === currentYear ? dateStr.slice(5) : dateStr;
+}
+
 /**
  * Split an array into chunks.
  */

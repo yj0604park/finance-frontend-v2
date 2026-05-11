@@ -130,7 +130,7 @@ export function StocksPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Stocks</h1>
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Stocks</h1>
           <p className="text-muted-foreground mt-1 text-sm">주식 종목별 가격 기록 관리</p>
         </div>
         <div className="flex items-center gap-3">

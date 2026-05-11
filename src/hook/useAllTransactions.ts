@@ -65,13 +65,15 @@ export function useAllTransactions({
               dateGte: dateGte ?? null,
               dateLte: dateLte ?? null,
             },
-            fetchPolicy: "network-only",
+            fetchPolicy: "cache-first",
           });
 
           if (cancelled) return;
 
           const relay: GetAllTransactionsQuery["transactionRelay"] = result.data.transactionRelay;
           allEdges.push(...relay.edges);
+          setEdges([...allEdges]); // stream results as each batch arrives
+          setTotalCount(allEdges.length);
           hasNext = relay.pageInfo.hasNextPage;
           cursor = relay.pageInfo.endCursor ?? null;
 
@@ -79,8 +81,6 @@ export function useAllTransactions({
         }
 
         if (!cancelled) {
-          setEdges(allEdges);
-          setTotalCount(allEdges.length);
           setLoading(false);
         }
       } catch (e) {

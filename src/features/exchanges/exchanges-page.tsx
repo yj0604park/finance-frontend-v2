@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { format, parseISO } from "date-fns";
 import { useGetExchangeListQuery, ExchangeType, CurrencyType } from "@/graphql/generated/graphql";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatDate } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -83,7 +82,7 @@ export function ExchangesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">환전 내역</h1>
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">환전 내역</h1>
           <p className="text-muted-foreground mt-1 text-sm">
             외화 환전 거래 내역
           </p>
@@ -166,7 +165,7 @@ export function ExchangesPage() {
                     return (
                       <TableRow key={ex.id}>
                         <TableCell className="text-muted-foreground whitespace-nowrap text-sm">
-                          {format(parseISO(ex.date), "yyyy-MM-dd")}
+                          {formatDate(ex.date)}
                         </TableCell>
                         <TableCell className="text-sm">
                           <div className="font-mono font-medium text-red-600 dark:text-red-400">

@@ -537,6 +537,8 @@ export type Mutation = {
   createTransaction: TransactionNode;
   updateAccount: AccountNode;
   updateSalary: SalaryNode;
+  updateStockTransaction: StockTransactionNode;
+  updateTransaction: TransactionNode;
 };
 
 
@@ -587,6 +589,16 @@ export type MutationUpdateAccountArgs = {
 
 export type MutationUpdateSalaryArgs = {
   data: SalaryPartialInput;
+};
+
+
+export type MutationUpdateStockTransactionArgs = {
+  data: StockTransactionPartialInput;
+};
+
+
+export type MutationUpdateTransactionArgs = {
+  data: TransactionPartialInput;
 };
 
 /** An object with a Globally Unique ID */
@@ -933,7 +945,7 @@ export type StockPriceFilter = {
   OR: InputMaybe<StockPriceFilter>;
   date: InputMaybe<DateDateFilterLookup>;
   id: InputMaybe<IdBaseFilterLookup>;
-  stock: InputMaybe<StockFilter>;
+  stock: StockFilter;
 };
 
 export type StockPriceInput = {
@@ -980,9 +992,10 @@ export type StockTransactionFilter = {
   DISTINCT: InputMaybe<Scalars['Boolean']['input']>;
   NOT: InputMaybe<StockTransactionFilter>;
   OR: InputMaybe<StockTransactionFilter>;
+  account: AccountFilter;
   date: InputMaybe<DateDateFilterLookup>;
   id: InputMaybe<IdBaseFilterLookup>;
-  stock: InputMaybe<StockFilter>;
+  stock: StockFilter;
 };
 
 export type StockTransactionInput = {
@@ -1005,7 +1018,7 @@ export type StockTransactionNode = Node & {
   id: Scalars['ID']['output'];
   note: Maybe<Scalars['String']['output']>;
   price: Scalars['Decimal']['output'];
-  relatedTransaction: Maybe<TransactionNode>;
+  relatedTransaction: TransactionNode;
   shares: Scalars['Decimal']['output'];
   stock: StockNode;
 };
@@ -1033,6 +1046,11 @@ export type StockTransactionNodeEdge = {
 export type StockTransactionOrder = {
   date: InputMaybe<Ordering>;
   price: InputMaybe<Ordering>;
+};
+
+export type StockTransactionPartialInput = {
+  id: Scalars['ID']['input'];
+  relatedTransaction: InputMaybe<OneToManyInput>;
 };
 
 export type StrFilterLookup = {
@@ -1176,6 +1194,14 @@ export type TransactionOrder = {
   balance: InputMaybe<Ordering>;
   date: InputMaybe<Ordering>;
   id: InputMaybe<Ordering>;
+};
+
+export type TransactionPartialInput = {
+  id: Scalars['ID']['input'];
+  isInternal: InputMaybe<Scalars['Boolean']['input']>;
+  note: InputMaybe<Scalars['String']['input']>;
+  retailer: InputMaybe<OneToManyInput>;
+  type: InputMaybe<TransactionCategory>;
 };
 
 /** One possible value for a given Enum. Enum values are unique values, not a placeholder for a string or numeric value. However an Enum value is returned in a JSON response as a string. */
@@ -1484,10 +1510,39 @@ export type GetAmountSnapshotsQueryVariables = Exact<{
 
 export type GetAmountSnapshotsQuery = { __typename?: 'Query', krwSnapshot: { __typename?: 'AmountSnapshotNodeConnection', edges: Array<{ __typename?: 'AmountSnapshotNodeEdge', node: { __typename?: 'AmountSnapshotNode', id: string, amount: string, currency: CurrencyType, date: string, summary: Record<string, unknown> | null } }> }, usdSnapshot: { __typename?: 'AmountSnapshotNodeConnection', edges: Array<{ __typename?: 'AmountSnapshotNodeEdge', node: { __typename?: 'AmountSnapshotNode', id: string, amount: string, currency: CurrencyType, date: string, summary: Record<string, unknown> | null } }> } };
 
+export type GetStockTransactionQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetStockTransactionQuery = { __typename?: 'Query', stockTransactionRelay: { __typename?: 'StockTransactionNodeConnection', edges: Array<{ __typename?: 'StockTransactionNodeEdge', node: { __typename?: 'StockTransactionNode', id: string, date: string, price: string, amount: string, shares: string, balance: string | null, note: string | null, stock: { __typename?: 'StockNode', id: string, ticker: string | null, name: string, currency: CurrencyType }, account: { __typename?: 'AccountNode', id: string, name: string, currency: CurrencyType, bank: { __typename?: 'BankNode', name: string } }, relatedTransaction: { __typename?: 'TransactionNode', id: string, date: string, amount: string, type: TransactionCategory, retailer: { __typename?: 'RetailerNode', name: string } | null } } }> } };
+
 export type GetStockListQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type GetStockListQuery = { __typename?: 'Query', stockRelay: { __typename?: 'StockNodeConnection', totalCount: number | null, edges: Array<{ __typename?: 'StockNodeEdge', node: { __typename?: 'StockNode', id: string, ticker: string | null, name: string, currency: CurrencyType } }> } };
+
+export type GetAllStocksQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetAllStocksQuery = { __typename?: 'Query', stockRelay: { __typename?: 'StockNodeConnection', edges: Array<{ __typename?: 'StockNodeEdge', node: { __typename?: 'StockNode', id: string, ticker: string | null, name: string, currency: CurrencyType } }> } };
+
+export type GetAccountStockTransactionsQueryVariables = Exact<{
+  accountId: InputMaybe<Scalars['ID']['input']>;
+  after: InputMaybe<Scalars['String']['input']>;
+  first: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type GetAccountStockTransactionsQuery = { __typename?: 'Query', stockTransactionRelay: { __typename?: 'StockTransactionNodeConnection', totalCount: number | null, edges: Array<{ __typename?: 'StockTransactionNodeEdge', node: { __typename?: 'StockTransactionNode', id: string, date: string, price: string, amount: string, shares: string, balance: string | null, note: string | null, stock: { __typename?: 'StockNode', id: string, ticker: string | null, name: string, currency: CurrencyType }, relatedTransaction: { __typename?: 'TransactionNode', id: string } } }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor: string | null } } };
+
+export type UpdateStockTransactionMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  relatedTransactionId: InputMaybe<Scalars['ID']['input']>;
+}>;
+
+
+export type UpdateStockTransactionMutation = { __typename?: 'Mutation', updateStockTransaction: { __typename?: 'StockTransactionNode', id: string, relatedTransaction: { __typename?: 'TransactionNode', id: string } } };
 
 export type CreateStockMutationVariables = Exact<{
   name: Scalars['String']['input'];
@@ -1610,6 +1665,14 @@ export type GetInternalTransactionsQueryVariables = Exact<{
 
 export type GetInternalTransactionsQuery = { __typename?: 'Query', transactionRelay: { __typename?: 'TransactionNodeConnection', totalCount: number | null, edges: Array<{ __typename?: 'TransactionNodeEdge', node: { __typename?: 'TransactionNode', id: string, date: string, amount: string, type: TransactionCategory, isInternal: boolean, retailer: { __typename?: 'RetailerNode', id: string, name: string } | null, account: { __typename?: 'AccountNode', id: string, name: string, currency: CurrencyType, bank: { __typename?: 'BankNode', name: string } } } }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor: string | null } } };
 
+export type GetUnlinkedStockTransactionsQueryVariables = Exact<{
+  accountId: InputMaybe<Scalars['ID']['input']>;
+  after: Scalars['String']['input'];
+}>;
+
+
+export type GetUnlinkedStockTransactionsQuery = { __typename?: 'Query', transactionRelay: { __typename?: 'TransactionNodeConnection', totalCount: number | null, edges: Array<{ __typename?: 'TransactionNodeEdge', node: { __typename?: 'TransactionNode', id: string, date: string, amount: string, note: string | null, account: { __typename?: 'AccountNode', id: string, currency: CurrencyType } } }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor: string | null } } };
+
 export type GetAccountMonthCountQueryVariables = Exact<{
   accountId: InputMaybe<Scalars['ID']['input']>;
   dateGte: InputMaybe<Scalars['Date']['input']>;
@@ -1618,6 +1681,17 @@ export type GetAccountMonthCountQueryVariables = Exact<{
 
 
 export type GetAccountMonthCountQuery = { __typename?: 'Query', transactionRelay: { __typename?: 'TransactionNodeConnection', totalCount: number | null } };
+
+export type UpdateTransactionMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  type: InputMaybe<TransactionCategory>;
+  retailerId: InputMaybe<Scalars['ID']['input']>;
+  note: InputMaybe<Scalars['String']['input']>;
+  isInternal: InputMaybe<Scalars['Boolean']['input']>;
+}>;
+
+
+export type UpdateTransactionMutation = { __typename?: 'Mutation', updateTransaction: { __typename?: 'TransactionNode', id: string, type: TransactionCategory, note: string | null, isInternal: boolean, reviewed: boolean, retailer: { __typename?: 'RetailerNode', id: string, name: string } | null } };
 
 
 export const CreateRetailerDocument = gql`
@@ -2880,6 +2954,85 @@ export type GetAmountSnapshotsQueryHookResult = ReturnType<typeof useGetAmountSn
 export type GetAmountSnapshotsLazyQueryHookResult = ReturnType<typeof useGetAmountSnapshotsLazyQuery>;
 export type GetAmountSnapshotsSuspenseQueryHookResult = ReturnType<typeof useGetAmountSnapshotsSuspenseQuery>;
 export type GetAmountSnapshotsQueryResult = Apollo.QueryResult<GetAmountSnapshotsQuery, GetAmountSnapshotsQueryVariables>;
+export const GetStockTransactionDocument = gql`
+    query GetStockTransaction($id: ID!) {
+  stockTransactionRelay(
+    filters: {stock: {}, account: {bank: {}}, id: {exact: $id}}
+    first: 1
+  ) {
+    edges {
+      node {
+        id
+        date
+        price
+        amount
+        shares
+        balance
+        note
+        stock {
+          id
+          ticker
+          name
+          currency
+        }
+        account {
+          id
+          name
+          currency
+          bank {
+            name
+          }
+        }
+        relatedTransaction {
+          id
+          date
+          amount
+          type
+          retailer {
+            name
+          }
+        }
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetStockTransactionQuery__
+ *
+ * To run a query within a React component, call `useGetStockTransactionQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetStockTransactionQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetStockTransactionQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useGetStockTransactionQuery(baseOptions: Apollo.QueryHookOptions<GetStockTransactionQuery, GetStockTransactionQueryVariables> & ({ variables: GetStockTransactionQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetStockTransactionQuery, GetStockTransactionQueryVariables>(GetStockTransactionDocument, options);
+      }
+export function useGetStockTransactionLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetStockTransactionQuery, GetStockTransactionQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetStockTransactionQuery, GetStockTransactionQueryVariables>(GetStockTransactionDocument, options);
+        }
+// @ts-ignore
+export function useGetStockTransactionSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<GetStockTransactionQuery, GetStockTransactionQueryVariables>): Apollo.UseSuspenseQueryResult<GetStockTransactionQuery, GetStockTransactionQueryVariables>;
+export function useGetStockTransactionSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetStockTransactionQuery, GetStockTransactionQueryVariables>): Apollo.UseSuspenseQueryResult<GetStockTransactionQuery | undefined, GetStockTransactionQueryVariables>;
+export function useGetStockTransactionSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetStockTransactionQuery, GetStockTransactionQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetStockTransactionQuery, GetStockTransactionQueryVariables>(GetStockTransactionDocument, options);
+        }
+export type GetStockTransactionQueryHookResult = ReturnType<typeof useGetStockTransactionQuery>;
+export type GetStockTransactionLazyQueryHookResult = ReturnType<typeof useGetStockTransactionLazyQuery>;
+export type GetStockTransactionSuspenseQueryHookResult = ReturnType<typeof useGetStockTransactionSuspenseQuery>;
+export type GetStockTransactionQueryResult = Apollo.QueryResult<GetStockTransactionQuery, GetStockTransactionQueryVariables>;
 export const GetStockListDocument = gql`
     query GetStockList {
   stockRelay {
@@ -2930,6 +3083,168 @@ export type GetStockListQueryHookResult = ReturnType<typeof useGetStockListQuery
 export type GetStockListLazyQueryHookResult = ReturnType<typeof useGetStockListLazyQuery>;
 export type GetStockListSuspenseQueryHookResult = ReturnType<typeof useGetStockListSuspenseQuery>;
 export type GetStockListQueryResult = Apollo.QueryResult<GetStockListQuery, GetStockListQueryVariables>;
+export const GetAllStocksDocument = gql`
+    query GetAllStocks {
+  stockRelay(first: 500) {
+    edges {
+      node {
+        id
+        ticker
+        name
+        currency
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetAllStocksQuery__
+ *
+ * To run a query within a React component, call `useGetAllStocksQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetAllStocksQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetAllStocksQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useGetAllStocksQuery(baseOptions?: Apollo.QueryHookOptions<GetAllStocksQuery, GetAllStocksQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetAllStocksQuery, GetAllStocksQueryVariables>(GetAllStocksDocument, options);
+      }
+export function useGetAllStocksLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetAllStocksQuery, GetAllStocksQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetAllStocksQuery, GetAllStocksQueryVariables>(GetAllStocksDocument, options);
+        }
+// @ts-ignore
+export function useGetAllStocksSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<GetAllStocksQuery, GetAllStocksQueryVariables>): Apollo.UseSuspenseQueryResult<GetAllStocksQuery, GetAllStocksQueryVariables>;
+export function useGetAllStocksSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetAllStocksQuery, GetAllStocksQueryVariables>): Apollo.UseSuspenseQueryResult<GetAllStocksQuery | undefined, GetAllStocksQueryVariables>;
+export function useGetAllStocksSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetAllStocksQuery, GetAllStocksQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetAllStocksQuery, GetAllStocksQueryVariables>(GetAllStocksDocument, options);
+        }
+export type GetAllStocksQueryHookResult = ReturnType<typeof useGetAllStocksQuery>;
+export type GetAllStocksLazyQueryHookResult = ReturnType<typeof useGetAllStocksLazyQuery>;
+export type GetAllStocksSuspenseQueryHookResult = ReturnType<typeof useGetAllStocksSuspenseQuery>;
+export type GetAllStocksQueryResult = Apollo.QueryResult<GetAllStocksQuery, GetAllStocksQueryVariables>;
+export const GetAccountStockTransactionsDocument = gql`
+    query GetAccountStockTransactions($accountId: ID, $after: String, $first: Int) {
+  stockTransactionRelay(
+    filters: {stock: {}, account: {bank: {}, id: {exact: $accountId}}}
+    order: {date: DESC}
+    first: $first
+    after: $after
+  ) {
+    edges {
+      node {
+        id
+        date
+        price
+        amount
+        shares
+        balance
+        note
+        stock {
+          id
+          ticker
+          name
+          currency
+        }
+        relatedTransaction {
+          id
+        }
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+    totalCount
+  }
+}
+    `;
+
+/**
+ * __useGetAccountStockTransactionsQuery__
+ *
+ * To run a query within a React component, call `useGetAccountStockTransactionsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetAccountStockTransactionsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetAccountStockTransactionsQuery({
+ *   variables: {
+ *      accountId: // value for 'accountId'
+ *      after: // value for 'after'
+ *      first: // value for 'first'
+ *   },
+ * });
+ */
+export function useGetAccountStockTransactionsQuery(baseOptions?: Apollo.QueryHookOptions<GetAccountStockTransactionsQuery, GetAccountStockTransactionsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetAccountStockTransactionsQuery, GetAccountStockTransactionsQueryVariables>(GetAccountStockTransactionsDocument, options);
+      }
+export function useGetAccountStockTransactionsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetAccountStockTransactionsQuery, GetAccountStockTransactionsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetAccountStockTransactionsQuery, GetAccountStockTransactionsQueryVariables>(GetAccountStockTransactionsDocument, options);
+        }
+// @ts-ignore
+export function useGetAccountStockTransactionsSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<GetAccountStockTransactionsQuery, GetAccountStockTransactionsQueryVariables>): Apollo.UseSuspenseQueryResult<GetAccountStockTransactionsQuery, GetAccountStockTransactionsQueryVariables>;
+export function useGetAccountStockTransactionsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetAccountStockTransactionsQuery, GetAccountStockTransactionsQueryVariables>): Apollo.UseSuspenseQueryResult<GetAccountStockTransactionsQuery | undefined, GetAccountStockTransactionsQueryVariables>;
+export function useGetAccountStockTransactionsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetAccountStockTransactionsQuery, GetAccountStockTransactionsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetAccountStockTransactionsQuery, GetAccountStockTransactionsQueryVariables>(GetAccountStockTransactionsDocument, options);
+        }
+export type GetAccountStockTransactionsQueryHookResult = ReturnType<typeof useGetAccountStockTransactionsQuery>;
+export type GetAccountStockTransactionsLazyQueryHookResult = ReturnType<typeof useGetAccountStockTransactionsLazyQuery>;
+export type GetAccountStockTransactionsSuspenseQueryHookResult = ReturnType<typeof useGetAccountStockTransactionsSuspenseQuery>;
+export type GetAccountStockTransactionsQueryResult = Apollo.QueryResult<GetAccountStockTransactionsQuery, GetAccountStockTransactionsQueryVariables>;
+export const UpdateStockTransactionDocument = gql`
+    mutation UpdateStockTransaction($id: ID!, $relatedTransactionId: ID) {
+  updateStockTransaction(
+    data: {id: $id, relatedTransaction: {set: $relatedTransactionId}}
+  ) {
+    id
+    relatedTransaction {
+      id
+    }
+  }
+}
+    `;
+export type UpdateStockTransactionMutationFn = Apollo.MutationFunction<UpdateStockTransactionMutation, UpdateStockTransactionMutationVariables>;
+
+/**
+ * __useUpdateStockTransactionMutation__
+ *
+ * To run a mutation, you first call `useUpdateStockTransactionMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateStockTransactionMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateStockTransactionMutation, { data, loading, error }] = useUpdateStockTransactionMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      relatedTransactionId: // value for 'relatedTransactionId'
+ *   },
+ * });
+ */
+export function useUpdateStockTransactionMutation(baseOptions?: Apollo.MutationHookOptions<UpdateStockTransactionMutation, UpdateStockTransactionMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateStockTransactionMutation, UpdateStockTransactionMutationVariables>(UpdateStockTransactionDocument, options);
+      }
+export type UpdateStockTransactionMutationHookResult = ReturnType<typeof useUpdateStockTransactionMutation>;
+export type UpdateStockTransactionMutationResult = Apollo.MutationResult<UpdateStockTransactionMutation>;
+export type UpdateStockTransactionMutationOptions = Apollo.BaseMutationOptions<UpdateStockTransactionMutation, UpdateStockTransactionMutationVariables>;
 export const CreateStockDocument = gql`
     mutation CreateStock($name: String!, $ticker: String, $currency: CurrencyType) {
   createStock(data: {name: $name, ticker: $ticker, currency: $currency}) {
@@ -3742,6 +4057,71 @@ export type GetInternalTransactionsQueryHookResult = ReturnType<typeof useGetInt
 export type GetInternalTransactionsLazyQueryHookResult = ReturnType<typeof useGetInternalTransactionsLazyQuery>;
 export type GetInternalTransactionsSuspenseQueryHookResult = ReturnType<typeof useGetInternalTransactionsSuspenseQuery>;
 export type GetInternalTransactionsQueryResult = Apollo.QueryResult<GetInternalTransactionsQuery, GetInternalTransactionsQueryVariables>;
+export const GetUnlinkedStockTransactionsDocument = gql`
+    query GetUnlinkedStockTransactions($accountId: ID, $after: String!) {
+  transactionRelay(
+    filters: {account: {bank: {}, id: {exact: $accountId}}, type: {exact: STOCK}}
+    order: {date: DESC}
+    first: 100
+    after: $after
+  ) {
+    edges {
+      node {
+        id
+        date
+        amount
+        note
+        account {
+          id
+          currency
+        }
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+    totalCount
+  }
+}
+    `;
+
+/**
+ * __useGetUnlinkedStockTransactionsQuery__
+ *
+ * To run a query within a React component, call `useGetUnlinkedStockTransactionsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetUnlinkedStockTransactionsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetUnlinkedStockTransactionsQuery({
+ *   variables: {
+ *      accountId: // value for 'accountId'
+ *      after: // value for 'after'
+ *   },
+ * });
+ */
+export function useGetUnlinkedStockTransactionsQuery(baseOptions: Apollo.QueryHookOptions<GetUnlinkedStockTransactionsQuery, GetUnlinkedStockTransactionsQueryVariables> & ({ variables: GetUnlinkedStockTransactionsQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetUnlinkedStockTransactionsQuery, GetUnlinkedStockTransactionsQueryVariables>(GetUnlinkedStockTransactionsDocument, options);
+      }
+export function useGetUnlinkedStockTransactionsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetUnlinkedStockTransactionsQuery, GetUnlinkedStockTransactionsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetUnlinkedStockTransactionsQuery, GetUnlinkedStockTransactionsQueryVariables>(GetUnlinkedStockTransactionsDocument, options);
+        }
+// @ts-ignore
+export function useGetUnlinkedStockTransactionsSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<GetUnlinkedStockTransactionsQuery, GetUnlinkedStockTransactionsQueryVariables>): Apollo.UseSuspenseQueryResult<GetUnlinkedStockTransactionsQuery, GetUnlinkedStockTransactionsQueryVariables>;
+export function useGetUnlinkedStockTransactionsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetUnlinkedStockTransactionsQuery, GetUnlinkedStockTransactionsQueryVariables>): Apollo.UseSuspenseQueryResult<GetUnlinkedStockTransactionsQuery | undefined, GetUnlinkedStockTransactionsQueryVariables>;
+export function useGetUnlinkedStockTransactionsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetUnlinkedStockTransactionsQuery, GetUnlinkedStockTransactionsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetUnlinkedStockTransactionsQuery, GetUnlinkedStockTransactionsQueryVariables>(GetUnlinkedStockTransactionsDocument, options);
+        }
+export type GetUnlinkedStockTransactionsQueryHookResult = ReturnType<typeof useGetUnlinkedStockTransactionsQuery>;
+export type GetUnlinkedStockTransactionsLazyQueryHookResult = ReturnType<typeof useGetUnlinkedStockTransactionsLazyQuery>;
+export type GetUnlinkedStockTransactionsSuspenseQueryHookResult = ReturnType<typeof useGetUnlinkedStockTransactionsSuspenseQuery>;
+export type GetUnlinkedStockTransactionsQueryResult = Apollo.QueryResult<GetUnlinkedStockTransactionsQuery, GetUnlinkedStockTransactionsQueryVariables>;
 export const GetAccountMonthCountDocument = gql`
     query GetAccountMonthCount($accountId: ID, $dateGte: Date, $dateLte: Date) {
   transactionRelay(
@@ -3790,3 +4170,50 @@ export type GetAccountMonthCountQueryHookResult = ReturnType<typeof useGetAccoun
 export type GetAccountMonthCountLazyQueryHookResult = ReturnType<typeof useGetAccountMonthCountLazyQuery>;
 export type GetAccountMonthCountSuspenseQueryHookResult = ReturnType<typeof useGetAccountMonthCountSuspenseQuery>;
 export type GetAccountMonthCountQueryResult = Apollo.QueryResult<GetAccountMonthCountQuery, GetAccountMonthCountQueryVariables>;
+export const UpdateTransactionDocument = gql`
+    mutation UpdateTransaction($id: ID!, $type: TransactionCategory, $retailerId: ID, $note: String, $isInternal: Boolean) {
+  updateTransaction(
+    data: {id: $id, type: $type, retailer: {set: $retailerId}, note: $note, isInternal: $isInternal}
+  ) {
+    id
+    type
+    retailer {
+      id
+      name
+    }
+    note
+    isInternal
+    reviewed
+  }
+}
+    `;
+export type UpdateTransactionMutationFn = Apollo.MutationFunction<UpdateTransactionMutation, UpdateTransactionMutationVariables>;
+
+/**
+ * __useUpdateTransactionMutation__
+ *
+ * To run a mutation, you first call `useUpdateTransactionMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateTransactionMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateTransactionMutation, { data, loading, error }] = useUpdateTransactionMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      type: // value for 'type'
+ *      retailerId: // value for 'retailerId'
+ *      note: // value for 'note'
+ *      isInternal: // value for 'isInternal'
+ *   },
+ * });
+ */
+export function useUpdateTransactionMutation(baseOptions?: Apollo.MutationHookOptions<UpdateTransactionMutation, UpdateTransactionMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateTransactionMutation, UpdateTransactionMutationVariables>(UpdateTransactionDocument, options);
+      }
+export type UpdateTransactionMutationHookResult = ReturnType<typeof useUpdateTransactionMutation>;
+export type UpdateTransactionMutationResult = Apollo.MutationResult<UpdateTransactionMutation>;
+export type UpdateTransactionMutationOptions = Apollo.BaseMutationOptions<UpdateTransactionMutation, UpdateTransactionMutationVariables>;

@@ -5,8 +5,9 @@ import {
   useGetAccountListQuery,
   useGetAccountMonthCountQuery,
   useGetInternalTransactionsQuery,
+  useGetUnreviewedTransactionsQuery,
 } from "@/graphql/generated/graphql";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatDate } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -145,7 +146,7 @@ function InternalMismatchSection() {
                 className="cursor-pointer hover:bg-muted/50"
                 onClick={() => navigate(`/transactions/${encodeURIComponent(tx.id)}`)}
               >
-                <TableCell className="text-sm whitespace-nowrap">{tx.date}</TableCell>
+                <TableCell className="text-sm whitespace-nowrap">{formatDate(tx.date)}</TableCell>
                 <TableCell className="text-sm">
                   <span>{tx.account.name}</span>
                   <span className="ml-1 text-xs text-muted-foreground">{tx.account.bank.name}</span>
@@ -366,13 +367,45 @@ function MonthCellData({
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
+function UnreviewedSummary() {
+  const navigate = useNavigate();
+  const { data, loading } = useGetUnreviewedTransactionsQuery({
+    variables: { first: 1, after: "", dateGte: null, dateLte: null },
+  });
+  const count = data?.transactionRelay?.totalCount ?? 0;
+
+  return (
+    <Card
+      className="cursor-pointer hover:shadow-md transition-shadow"
+      onClick={() => navigate("/review")}
+    >
+      <CardContent className="p-4 flex items-center justify-between">
+        <div>
+          <p className="text-sm text-muted-foreground">미검토 거래</p>
+          {loading ? (
+            <div className="h-7 w-16 animate-pulse bg-muted rounded mt-1" />
+          ) : (
+            <p className={`text-2xl font-bold ${count > 0 ? "text-amber-600" : "text-green-600"}`}>
+              {count}건
+            </p>
+          )}
+        </div>
+        <Badge variant={count > 0 ? "outline" : "secondary"} className={count > 0 ? "border-amber-300 text-amber-700 bg-amber-500/10" : ""}>
+          {count > 0 ? "검토 필요" : "모두 완료"}
+        </Badge>
+      </CardContent>
+    </Card>
+  );
+}
+
 export function AuditPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">감사 (Audit)</h1>
+        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">감사 (Audit)</h1>
         <p className="text-muted-foreground mt-1">데이터 품질 및 일관성 점검</p>
       </div>
+      <UnreviewedSummary />
       <InactiveAccountsSection />
       <InternalMismatchSection />
       <CompletenessSection />

@@ -1,11 +1,10 @@
 import { useGetBankListQuery, useGetAmountSnapshotsQuery, useGetLastTransactionDateQuery } from "@/graphql/generated/graphql";
-import { formatCurrency, getTotalBalance } from "@/lib/format";
+import { formatCurrency, formatDate, getTotalBalance } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BalanceChart } from "./balance-chart";
 import { BankCard } from "./bank-card";
 import { Landmark, CalendarDays, Building2 } from "lucide-react";
-import { format, parseISO } from "date-fns";
 
 export function DashboardPage() {
   const { data, loading, error } = useGetBankListQuery();
@@ -29,12 +28,12 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Dashboard</h1>
         {lastTxDate && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <CalendarDays className="h-4 w-4" />
-            마지막 거래: {format(parseISO(lastTxDate), "yyyy-MM-dd")}
+            마지막 거래: {formatDate(lastTxDate)}
           </div>
         )}
       </div>

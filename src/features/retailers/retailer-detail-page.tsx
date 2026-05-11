@@ -3,21 +3,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import { format, parseISO, subMonths } from "date-fns";
 import { Decimal } from "decimal.js";
 import { useAllTransactions } from "@/hook/useAllTransactions";
-import { formatCurrency, getDisplayColor, toNumber } from "@/lib/format";
+import { formatCurrency, toNumber } from "@/lib/format";
 import { CATEGORY_LABELS } from "@/lib/constants";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Bar,
   BarChart,
@@ -27,7 +15,11 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { ArrowLeft, ShoppingBag, TrendingDown, TrendingUp } from "lucide-react";
+import { ShoppingBag, TrendingDown, TrendingUp } from "lucide-react";
+import { DateRangeFilter } from "@/components/shared/date-range-filter";
+import { PageHeader } from "@/components/shared/page-header";
+import { StatsCard } from "@/components/shared/stats-card";
+import { TransactionTable } from "@/components/shared/transaction-table";
 
 const RETAILER_TYPE_LABELS: Record<string, string> = {
   RESTAURANT: "음식점",
@@ -107,109 +99,56 @@ export function RetailerDetailPage() {
     return <div>잘못된 접근입니다.</div>;
   }
 
+  const headerBadges = [
+    ...(retailerInfo?.type ? [{ label: RETAILER_TYPE_LABELS[retailerInfo.type] ?? retailerInfo.type, variant: "outline" as const }] : []),
+    ...(retailerInfo?.category ? [{ label: CATEGORY_LABELS[retailerInfo.category] ?? retailerInfo.category, variant: "secondary" as const }] : []),
+  ];
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/retailers")}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div>
-          {txLoading ? (
-            <Skeleton className="h-8 w-48" />
-          ) : (
-            <>
-              <div className="flex items-center gap-3">
-                <h1 className="text-3xl font-bold tracking-tight">
-                  {retailerInfo?.name ?? "가맹점 상세"}
-                </h1>
-                {retailerInfo?.type && (
-                  <Badge variant="outline">{RETAILER_TYPE_LABELS[retailerInfo.type] ?? retailerInfo.type}</Badge>
-                )}
-                {retailerInfo?.category && (
-                  <Badge variant="secondary">{CATEGORY_LABELS[retailerInfo.category] ?? retailerInfo.category}</Badge>
-                )}
-              </div>
-              <p className="text-muted-foreground mt-0.5 text-sm">
-                가맹점별 거래 내역
-              </p>
-            </>
-          )}
-        </div>
-      </div>
+      <PageHeader
+        onBack={() => navigate("/retailers")}
+        title={retailerInfo?.name ?? "가맹점 상세"}
+        loading={txLoading}
+        badges={headerBadges}
+        subtitle="가맹점별 거래 내역"
+      />
 
       {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-3">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-indigo-100 p-2 dark:bg-indigo-900/30">
-                <ShoppingBag className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-              </div>
-              <div>
-                <p className="text-muted-foreground text-xs">거래 횟수</p>
-                <p className="text-2xl font-bold">{transactions.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-red-100 p-2 dark:bg-red-900/30">
-                <TrendingDown className="h-5 w-5 text-red-500" />
-              </div>
-              <div>
-                <p className="text-muted-foreground text-xs">총 지출</p>
-                <p className="text-2xl font-bold text-red-600">
-                  {totalSpending.isZero()
-                    ? "—"
-                    : formatCurrency(totalSpending.toString(), currency)}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-emerald-100 p-2 dark:bg-emerald-900/30">
-                <TrendingUp className="h-5 w-5 text-emerald-600" />
-              </div>
-              <div>
-                <p className="text-muted-foreground text-xs">총 수입</p>
-                <p className="text-2xl font-bold text-emerald-600">
-                  {totalIncome.isZero()
-                    ? "—"
-                    : formatCurrency(totalIncome.toString(), currency)}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <StatsCard
+          icon={ShoppingBag}
+          label="거래 횟수"
+          value={transactions.length}
+          iconBg="bg-indigo-100 dark:bg-indigo-900/30"
+          iconColor="text-indigo-600 dark:text-indigo-400"
+        />
+        <StatsCard
+          icon={TrendingDown}
+          label="총 지출"
+          value={totalSpending.isZero() ? "—" : formatCurrency(totalSpending.toString(), currency)}
+          iconBg="bg-red-100 dark:bg-red-900/30"
+          iconColor="text-red-500"
+          valueColor="text-red-600"
+        />
+        <StatsCard
+          icon={TrendingUp}
+          label="총 수입"
+          value={totalIncome.isZero() ? "—" : formatCurrency(totalIncome.toString(), currency)}
+          iconBg="bg-emerald-100 dark:bg-emerald-900/30"
+          iconColor="text-emerald-600"
+          valueColor="text-emerald-600"
+        />
       </div>
 
       {/* Filters */}
-      <Card>
-        <CardContent className="flex flex-wrap items-center gap-4 pt-6">
-          <span className="text-sm font-medium text-muted-foreground">기간</span>
-          <div className="flex items-center gap-2">
-            <Input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="w-40"
-            />
-            <span className="text-muted-foreground text-sm">~</span>
-            <Input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="w-40"
-            />
-          </div>
-        </CardContent>
-      </Card>
+      <DateRangeFilter
+        startDate={startDate}
+        endDate={endDate}
+        onStartChange={setStartDate}
+        onEndChange={setEndDate}
+      />
 
       {/* Monthly chart */}
       {chartData.length > 1 && (
@@ -254,70 +193,19 @@ export function RetailerDetailPage() {
         <CardHeader>
           <CardTitle>거래 내역</CardTitle>
         </CardHeader>
-        <CardContent className="p-0">
-          {txLoading ? (
-            <div className="space-y-2 p-6">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={`skel-${i.toString()}`} className="h-10 w-full" />
-              ))}
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>날짜</TableHead>
-                  <TableHead>계좌</TableHead>
-                  <TableHead>분류</TableHead>
-                  <TableHead className="text-right">금액</TableHead>
-                  <TableHead>메모</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {transactions.length === 0 ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={5}
-                      className="text-center text-muted-foreground py-12"
-                    >
-                      이 기간에 거래가 없습니다.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  transactions.map((edge) => {
-                    const tx = edge.node;
-                    const curr = tx.account.currency;
-                    return (
-                      <TableRow key={tx.id}>
-                        <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                          {format(parseISO(tx.date), "yyyy-MM-dd")}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          <div className="font-medium">{tx.account.name}</div>
-                          <div className="text-muted-foreground text-xs">
-                            {tx.account.bank.name}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="text-xs">
-                            {CATEGORY_LABELS[tx.type] ?? tx.type}
-                          </Badge>
-                        </TableCell>
-                        <TableCell
-                          className={`text-right font-mono text-sm ${getDisplayColor(tx.amount)}`}
-                        >
-                          {formatCurrency(tx.amount, curr)}
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground max-w-40 truncate">
-                          {tx.note ?? ""}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
+        <TransactionTable
+          transactions={transactions}
+          loading={txLoading}
+          columns={{
+            account: true,
+            retailer: false,
+            category: true,
+            note: true,
+            flags: false,
+          }}
+          onRowClick={(id) => navigate(`/transactions/${encodeURIComponent(id)}`)}
+          skeletonRows={6}
+        />
       </Card>
     </div>
   );

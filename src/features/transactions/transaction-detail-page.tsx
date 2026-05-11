@@ -1,11 +1,12 @@
 import { useState, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { format, parseISO } from "date-fns";
 import {
   useGetTransactionQuery,
   useGetRetailerListQuery,
+  useUpdateTransactionMutation,
+  TransactionCategory,
 } from "@/graphql/generated/graphql";
-import { formatCurrency, getDisplayColor } from "@/lib/format";
+import { formatCurrency, formatDate, getDisplayColor } from "@/lib/format";
 import { CATEGORY_LABELS } from "@/lib/constants";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -36,13 +36,6 @@ async function toggleReviewedApi(numericId: string): Promise<void> {
   });
 }
 
-function formatDateSafe(dateStr: string): string {
-  try {
-    return format(parseISO(dateStr), "yyyy-MM-dd");
-  } catch {
-    return dateStr;
-  }
-}
 
 export function TransactionDetailPage() {
   const { transactionId } = useParams<{ transactionId: string }>();
@@ -85,12 +78,16 @@ export function TransactionDetailPage() {
   const [togglingReviewed, setTogglingReviewed] = useState(false);
 
   // Saving state
-  const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
+
+  const [updateTransaction, { loading: saving }] = useUpdateTransactionMutation({
+    onCompleted: () => setSaveMessage("저장되었습니다."),
+    onError: (e) => setSaveMessage(`오류: ${e.message}`),
+  });
 
   // Derived display values (prefer edit state, fall back to loaded data)
   const displayCategory = editCategory ?? tx?.type ?? "";
-  const displayRetailerId = editRetailerId ?? tx?.retailer?.id ?? "";
+  const displayRetailerId = editRetailerId ?? tx?.retailer?.id ?? "__none__";
   const displayNote = editNote ?? tx?.note ?? "";
   const displayIsInternal = editIsInternal ?? tx?.isInternal ?? false;
   const displayReviewed = localReviewed ?? tx?.reviewed ?? false;
@@ -113,18 +110,19 @@ export function TransactionDetailPage() {
     }
   }, [numericId, tx?.reviewed]);
 
-  const handleSave = useCallback(async () => {
-    // TODO: Add updateTransaction mutation to backend when available.
-    // Currently there is no updateTransaction GraphQL mutation, so we show a message.
-    setSaving(true);
-    try {
-      // Simulate async save
-      await new Promise((r) => setTimeout(r, 300));
-      setSaveMessage("수정 기능 미지원 — 백엔드 mutation이 필요합니다.");
-    } finally {
-      setSaving(false);
-    }
-  }, []);
+  const handleSave = useCallback(() => {
+    if (!tx?.id) return;
+    setSaveMessage(null);
+    void updateTransaction({
+      variables: {
+        id: tx.id,
+        type: (displayCategory || null) as TransactionCategory | null,
+        retailerId: (displayRetailerId === "__none__" ? null : displayRetailerId) || null,
+        note: displayNote || null,
+        isInternal: displayIsInternal,
+      },
+    });
+  }, [tx?.id, displayCategory, displayRetailerId, displayNote, displayIsInternal, updateTransaction]);
 
   if (!transactionId || !numericId) {
     return (
@@ -153,14 +151,40 @@ export function TransactionDetailPage() {
           <Skeleton className="h-8 w-64" />
         ) : (
           <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-3xl font-bold tracking-tight">
-              {tx?.retailer?.name ?? formatDateSafe(tx?.date ?? "")}
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+              {tx?.retailer?.name ?? formatDate(tx?.date)}
             </h1>
             <Badge variant="outline">{CATEGORY_LABELS[tx?.type ?? ""] ?? tx?.type ?? ""}</Badge>
-            {displayReviewed ? (
-              <Badge className="bg-green-500/15 text-green-700 border-green-300">검토 완료</Badge>
-            ) : (
-              <Badge className="bg-amber-500/15 text-amber-700 border-amber-300">미검토</Badge>
+            <Badge
+              variant="outline"
+              asChild
+              className={displayReviewed
+                ? "bg-green-500/15 text-green-700 border-green-300 cursor-pointer hover:bg-green-500/25 disabled:opacity-40"
+                : "bg-amber-500/15 text-amber-700 border-amber-300 cursor-pointer hover:bg-amber-500/25 disabled:opacity-40"
+              }
+            >
+              <button type="button" onClick={handleToggleReviewed} disabled={togglingReviewed}>
+                {togglingReviewed
+                  ? <RefreshCw className="animate-spin" />
+                  : displayReviewed ? <CheckCircle2 /> : <Circle />
+                }
+                {displayReviewed ? "검토 완료" : "미검토"}
+              </button>
+            </Badge>
+            <Badge
+              variant="outline"
+              asChild
+              className={displayIsInternal
+                ? "bg-primary/10 text-primary border-primary/30 cursor-pointer hover:bg-primary/20"
+                : "cursor-pointer hover:bg-accent"
+              }
+            >
+              <button type="button" onClick={() => setEditIsInternal((prev) => !(prev ?? tx?.isInternal ?? false))}>
+                내부 이체
+              </button>
+            </Badge>
+            {tx?.requiresDetail && (
+              <Badge className="bg-amber-500/15 text-amber-700 border-amber-300">세부 필요</Badge>
             )}
           </div>
         )}
@@ -176,7 +200,7 @@ export function TransactionDetailPage() {
             {loading ? (
               <Skeleton className="h-6 w-32" />
             ) : (
-              <p className="text-lg font-semibold">{formatDateSafe(tx?.date ?? "")}</p>
+              <p className="text-lg font-semibold">{formatDate(tx?.date)}</p>
             )}
           </CardContent>
         </Card>
@@ -254,63 +278,7 @@ export function TransactionDetailPage() {
         </Card>
       </div>
 
-      {/* Flags */}
-      <Card>
-        <CardHeader>
-          <CardTitle>플래그</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {loading ? (
-            <div className="space-y-3">
-              <Skeleton className="h-8 w-40" />
-              <Skeleton className="h-8 w-40" />
-              <Skeleton className="h-8 w-40" />
-            </div>
-          ) : (
-            <>
-              {/* Reviewed toggle — bidirectional on this page */}
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label className="text-base">검토 완료</Label>
-                  <p className="text-sm text-muted-foreground">
-                    이 페이지에서는 검토 완료 취소도 가능합니다.
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {togglingReviewed && <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />}
-                  <button
-                    type="button"
-                    onClick={handleToggleReviewed}
-                    disabled={togglingReviewed}
-                    className="text-muted-foreground hover:text-primary transition-colors disabled:opacity-40"
-                  >
-                    {displayReviewed ? (
-                      <CheckCircle2 className="h-6 w-6 text-green-500" />
-                    ) : (
-                      <Circle className="h-6 w-6" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* requiresDetail — read-only display */}
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label className="text-base">세부 필요</Label>
-                  <p className="text-sm text-muted-foreground">세부 정보가 필요한 거래</p>
-                </div>
-                <Switch
-                  checked={tx?.requiresDetail ?? false}
-                  disabled
-                  aria-label="requiresDetail"
-                />
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Edit Form */}
+{/* Edit Form */}
       <Card>
         <CardHeader>
           <CardTitle>수정</CardTitle>
@@ -349,13 +317,13 @@ export function TransactionDetailPage() {
                 <Label htmlFor="retailer">가맹점</Label>
                 <Select
                   value={displayRetailerId}
-                  onValueChange={(v) => setEditRetailerId(v)}
+                  onValueChange={(v) => setEditRetailerId(v === "__none__" ? null : v)}
                 >
                   <SelectTrigger id="retailer">
                     <SelectValue placeholder="가맹점 선택" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">— 없음 —</SelectItem>
+                    <SelectItem value="__none__">— 없음 —</SelectItem>
                     {allRetailers.map((edge) => (
                       <SelectItem key={edge.node.id} value={edge.node.id}>
                         {edge.node.name}
@@ -376,24 +344,9 @@ export function TransactionDetailPage() {
                 />
               </div>
 
-              {/* isInternal */}
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="isInternal" className="text-base cursor-pointer">
-                    내부 이체
-                  </Label>
-                  <p className="text-sm text-muted-foreground">계좌 간 이체 등 내부 거래</p>
-                </div>
-                <Switch
-                  id="isInternal"
-                  checked={displayIsInternal}
-                  onCheckedChange={(v) => setEditIsInternal(v)}
-                />
-              </div>
-
-              {/* Save button */}
+{/* Save button */}
               {saveMessage && (
-                <div className="rounded-md border border-amber-300 bg-amber-50 px-4 py-2 text-sm text-amber-700">
+                <div className={`rounded-md border px-4 py-2 text-sm ${saveMessage.startsWith("오류") ? "border-destructive/50 bg-destructive/10 text-destructive" : "border-green-300 bg-green-50 text-green-700"}`}>
                   {saveMessage}
                 </div>
               )}

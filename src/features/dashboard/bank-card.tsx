@@ -21,21 +21,21 @@ interface BankCardProps {
 }
 
 const BANK_COLORS = [
-  "from-indigo-50 to-violet-50 border-indigo-200 dark:from-indigo-950/30 dark:to-violet-950/30 dark:border-indigo-800",
-  "from-teal-50 to-emerald-50 border-teal-200 dark:from-teal-950/30 dark:to-emerald-950/30 dark:border-teal-800",
-  "from-violet-50 to-purple-50 border-violet-200 dark:from-violet-950/30 dark:to-purple-950/30 dark:border-violet-800",
-  "from-amber-50 to-orange-50 border-amber-200 dark:from-amber-950/30 dark:to-orange-950/30 dark:border-amber-800",
-  "from-sky-50 to-blue-50 border-sky-200 dark:from-sky-950/30 dark:to-blue-950/30 dark:border-sky-800",
-  "from-pink-50 to-rose-50 border-pink-200 dark:from-pink-950/30 dark:to-rose-950/30 dark:border-pink-800",
+  "border-border",
+  "border-border",
+  "border-border",
+  "border-border",
+  "border-border",
+  "border-border",
 ];
 
 const ICON_COLORS = [
-  "text-indigo-500",
-  "text-teal-500",
-  "text-violet-500",
-  "text-amber-500",
-  "text-sky-500",
-  "text-pink-500",
+  "text-primary",
+  "text-primary",
+  "text-primary",
+  "text-primary",
+  "text-primary",
+  "text-primary",
 ];
 
 export function BankCard({ bank, colorIdx }: BankCardProps) {
@@ -45,7 +45,7 @@ export function BankCard({ bank, colorIdx }: BankCardProps) {
 
   return (
     <Card
-      className={`bg-gradient-to-br ${colorClass} transition-shadow hover:shadow-md cursor-pointer`}
+      className={`${colorClass} transition-shadow hover:shadow-md cursor-pointer`}
       onClick={() => navigate(`/accounts?bank=${encodeURIComponent(bank.id)}`)}
     >
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

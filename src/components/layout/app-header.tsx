@@ -8,6 +8,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { Fragment } from "react";
 import { Link, useLocation } from "react-router-dom";
 
 const routeLabels: Record<string, string> = {
@@ -36,16 +37,18 @@ export function AppHeader() {
             const label = routeLabels[segment] || segment;
             const path = `/${segments.slice(0, i + 1).join("/")}`;
             return (
-              <BreadcrumbItem key={segment}>
+              <Fragment key={segment}>
                 <BreadcrumbSeparator />
-                {isLast ? (
-                  <BreadcrumbPage>{label}</BreadcrumbPage>
-                ) : (
-                  <BreadcrumbLink asChild>
-                    <Link to={path}>{label}</Link>
-                  </BreadcrumbLink>
-                )}
-              </BreadcrumbItem>
+                <BreadcrumbItem>
+                  {isLast ? (
+                    <BreadcrumbPage>{label}</BreadcrumbPage>
+                  ) : (
+                    <BreadcrumbLink asChild>
+                      <Link to={path}>{label}</Link>
+                    </BreadcrumbLink>
+                  )}
+                </BreadcrumbItem>
+              </Fragment>
             );
           })}
         </BreadcrumbList>

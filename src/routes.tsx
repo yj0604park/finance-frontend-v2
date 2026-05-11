@@ -48,6 +48,9 @@ const StocksPage = lazy(() =>
 const StockDetailPage = lazy(() =>
   import("@/features/stocks/stock-detail-page").then((m) => ({ default: m.StockDetailPage })),
 );
+const StockTransactionDetailPage = lazy(() =>
+  import("@/features/stocks/stock-transaction-detail-page").then((m) => ({ default: m.StockTransactionDetailPage })),
+);
 const ReviewPage = lazy(() =>
   import("@/features/review/review-page").then((m) => ({ default: m.ReviewPage })),
 );
@@ -193,6 +196,14 @@ export const routes: RouteObject[] = [
         element: (
           <SuspenseWrapper>
             <StockDetailPage />
+          </SuspenseWrapper>
+        ),
+      },
+      {
+        path: "stock-transactions/:stockTxId",
+        element: (
+          <SuspenseWrapper>
+            <StockTransactionDetailPage />
           </SuspenseWrapper>
         ),
       },
