@@ -1,19 +1,11 @@
-import { useState, useCallback, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import {
-  useGetTransactionQuery,
-  useGetRetailerListQuery,
-  useUpdateTransactionMutation,
-  TransactionCategory,
-} from "@/graphql/generated/graphql";
-import { formatCurrency, formatDate, getDisplayColor } from "@/lib/format";
-import { CATEGORY_LABELS } from "@/lib/constants";
+import { ArrowLeft, CheckCircle2, Circle, RefreshCw, Save } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -21,7 +13,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, CheckCircle2, Circle, RefreshCw, Save } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  type TransactionCategory,
+  useGetRetailerListQuery,
+  useGetTransactionQuery,
+  useUpdateTransactionMutation,
+} from "@/graphql/generated/graphql";
+import { CATEGORY_LABELS } from "@/lib/constants";
+import { formatCurrency, formatDate, getDisplayColor } from "@/lib/format";
 import { DateInput } from "./date-input";
 
 function getCsrfToken(): string {
@@ -36,7 +36,6 @@ async function toggleReviewedApi(numericId: string): Promise<void> {
     headers: { "X-CSRFToken": getCsrfToken() },
   });
 }
-
 
 export function TransactionDetailPage() {
   const { transactionId } = useParams<{ transactionId: string }>();
@@ -126,7 +125,15 @@ export function TransactionDetailPage() {
         isInternal: displayIsInternal,
       },
     });
-  }, [tx?.id, displayCategory, displayRetailerId, displayNote, displayIsInternal, updateTransaction]);
+  }, [
+    tx?.id,
+    displayDate,
+    displayCategory,
+    displayRetailerId,
+    displayNote,
+    displayIsInternal,
+    updateTransaction,
+  ]);
 
   if (!transactionId || !numericId) {
     return (
@@ -162,28 +169,36 @@ export function TransactionDetailPage() {
             <Badge
               variant="outline"
               asChild
-              className={displayReviewed
-                ? "bg-green-500/15 text-green-700 border-green-300 cursor-pointer hover:bg-green-500/25 disabled:opacity-40"
-                : "bg-amber-500/15 text-amber-700 border-amber-300 cursor-pointer hover:bg-amber-500/25 disabled:opacity-40"
+              className={
+                displayReviewed
+                  ? "bg-green-500/15 text-green-700 border-green-300 cursor-pointer hover:bg-green-500/25 disabled:opacity-40"
+                  : "bg-amber-500/15 text-amber-700 border-amber-300 cursor-pointer hover:bg-amber-500/25 disabled:opacity-40"
               }
             >
               <button type="button" onClick={handleToggleReviewed} disabled={togglingReviewed}>
-                {togglingReviewed
-                  ? <RefreshCw className="animate-spin" />
-                  : displayReviewed ? <CheckCircle2 /> : <Circle />
-                }
+                {togglingReviewed ? (
+                  <RefreshCw className="animate-spin" />
+                ) : displayReviewed ? (
+                  <CheckCircle2 />
+                ) : (
+                  <Circle />
+                )}
                 {displayReviewed ? "검토 완료" : "미검토"}
               </button>
             </Badge>
             <Badge
               variant="outline"
               asChild
-              className={displayIsInternal
-                ? "bg-primary/10 text-primary border-primary/30 cursor-pointer hover:bg-primary/20"
-                : "cursor-pointer hover:bg-accent"
+              className={
+                displayIsInternal
+                  ? "bg-primary/10 text-primary border-primary/30 cursor-pointer hover:bg-primary/20"
+                  : "cursor-pointer hover:bg-accent"
               }
             >
-              <button type="button" onClick={() => setEditIsInternal((prev) => !(prev ?? tx?.isInternal ?? false))}>
+              <button
+                type="button"
+                onClick={() => setEditIsInternal((prev) => !(prev ?? tx?.isInternal ?? false))}
+              >
                 내부 이체
               </button>
             </Badge>
@@ -276,13 +291,15 @@ export function TransactionDetailPage() {
             {loading ? (
               <Skeleton className="h-6 w-48" />
             ) : (
-              <p className="text-sm">{tx?.note ?? <span className="text-muted-foreground">—</span>}</p>
+              <p className="text-sm">
+                {tx?.note ?? <span className="text-muted-foreground">—</span>}
+              </p>
             )}
           </CardContent>
         </Card>
       </div>
 
-{/* Edit Form */}
+      {/* Edit Form */}
       <Card>
         <CardHeader>
           <CardTitle>수정</CardTitle>
@@ -305,10 +322,7 @@ export function TransactionDetailPage() {
               {/* Category */}
               <div className="space-y-2">
                 <Label htmlFor="category">분류 (카테고리)</Label>
-                <Select
-                  value={displayCategory}
-                  onValueChange={(v) => setEditCategory(v)}
-                >
+                <Select value={displayCategory} onValueChange={(v) => setEditCategory(v)}>
                   <SelectTrigger id="category">
                     <SelectValue placeholder="분류 선택" />
                   </SelectTrigger>
@@ -354,9 +368,11 @@ export function TransactionDetailPage() {
                 />
               </div>
 
-{/* Save button */}
+              {/* Save button */}
               {saveMessage && (
-                <div className={`rounded-md border px-4 py-2 text-sm ${saveMessage.startsWith("오류") ? "border-destructive/50 bg-destructive/10 text-destructive" : "border-green-300 bg-green-50 text-green-700"}`}>
+                <div
+                  className={`rounded-md border px-4 py-2 text-sm ${saveMessage.startsWith("오류") ? "border-destructive/50 bg-destructive/10 text-destructive" : "border-green-300 bg-green-50 text-green-700"}`}
+                >
                   {saveMessage}
                 </div>
               )}

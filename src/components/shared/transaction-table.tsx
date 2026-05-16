@@ -1,4 +1,6 @@
 import { CheckCircle2 } from "lucide-react";
+import { ReviewToggle } from "@/components/shared/review-toggle";
+import { TableSkeleton } from "@/components/shared/table-skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -11,8 +13,6 @@ import {
 } from "@/components/ui/table";
 import { CATEGORY_LABELS } from "@/lib/constants";
 import { formatCurrency, formatDate, getDisplayColor } from "@/lib/format";
-import { ReviewToggle } from "@/components/shared/review-toggle";
-import { TableSkeleton } from "@/components/shared/table-skeleton";
 
 /** Minimal transaction shape required by this table. */
 export interface TransactionRow {
@@ -130,36 +130,25 @@ export function TransactionTable({
           <TableHead>날짜</TableHead>
           {cols.retailer && <TableHead>가맹점</TableHead>}
           {cols.account && (
-            <TableHead className={hiddenClass(cols.accountMobileHidden, "sm")}>
-              계좌
-            </TableHead>
+            <TableHead className={hiddenClass(cols.accountMobileHidden, "sm")}>계좌</TableHead>
           )}
           {cols.category && (
-            <TableHead className={hiddenClass(cols.categoryMobileHidden, "sm")}>
-              분류
-            </TableHead>
+            <TableHead className={hiddenClass(cols.categoryMobileHidden, "sm")}>분류</TableHead>
           )}
           <TableHead className="text-right">금액</TableHead>
           {cols.balance && <TableHead className="text-right">잔액</TableHead>}
           {cols.note && (
-            <TableHead className={hiddenClass(cols.noteMobileHidden, "md")}>
-              메모
-            </TableHead>
+            <TableHead className={hiddenClass(cols.noteMobileHidden, "md")}>메모</TableHead>
           )}
           {cols.flags && (
-            <TableHead className={hiddenClass(cols.flagsMobileHidden, "md")}>
-              플래그
-            </TableHead>
+            <TableHead className={hiddenClass(cols.flagsMobileHidden, "md")}>플래그</TableHead>
           )}
         </TableRow>
       </TableHeader>
       <TableBody>
         {transactions.length === 0 ? (
           <TableRow>
-            <TableCell
-              colSpan={colCount}
-              className="py-12 text-center text-muted-foreground"
-            >
+            <TableCell colSpan={colCount} className="py-12 text-center text-muted-foreground">
               <CheckCircle2 className="mx-auto mb-2 h-8 w-8 text-green-500" />
               {emptyMessage}
             </TableCell>
@@ -201,9 +190,7 @@ export function TransactionTable({
                 </TableCell>
                 {cols.retailer && (
                   <TableCell className="max-w-32 truncate">
-                    {tx.retailer?.name ?? (
-                      <span className="text-muted-foreground">—</span>
-                    )}
+                    {tx.retailer?.name ?? <span className="text-muted-foreground">—</span>}
                   </TableCell>
                 )}
                 {cols.account && (
@@ -216,14 +203,10 @@ export function TransactionTable({
                 )}
                 {cols.category && (
                   <TableCell className={hiddenClass(cols.categoryMobileHidden, "sm")}>
-                    <Badge variant="outline">
-                      {CATEGORY_LABELS[tx.type] ?? tx.type}
-                    </Badge>
+                    <Badge variant="outline">{CATEGORY_LABELS[tx.type] ?? tx.type}</Badge>
                   </TableCell>
                 )}
-                <TableCell
-                  className={`text-right font-mono ${getDisplayColor(tx.amount)}`}
-                >
+                <TableCell className={`text-right font-mono ${getDisplayColor(tx.amount)}`}>
                   {formatCurrency(tx.amount, currency)}
                 </TableCell>
                 {cols.balance && (

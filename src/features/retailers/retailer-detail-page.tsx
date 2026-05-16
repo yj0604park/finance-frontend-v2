@@ -1,25 +1,17 @@
-import { useMemo, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
 import { format, parseISO, subMonths } from "date-fns";
 import { Decimal } from "decimal.js";
-import { useAllTransactions } from "@/hook/useAllTransactions";
-import { formatCurrency, toNumber } from "@/lib/format";
-import { CATEGORY_LABELS } from "@/lib/constants";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 import { ShoppingBag, TrendingDown, TrendingUp } from "lucide-react";
+import { useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { DateRangeFilter } from "@/components/shared/date-range-filter";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatsCard } from "@/components/shared/stats-card";
 import { TransactionTable } from "@/components/shared/transaction-table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAllTransactions } from "@/hook/useAllTransactions";
+import { CATEGORY_LABELS } from "@/lib/constants";
+import { formatCurrency, toNumber } from "@/lib/format";
 
 const RETAILER_TYPE_LABELS: Record<string, string> = {
   RESTAURANT: "음식점",
@@ -100,8 +92,22 @@ export function RetailerDetailPage() {
   }
 
   const headerBadges = [
-    ...(retailerInfo?.type ? [{ label: RETAILER_TYPE_LABELS[retailerInfo.type] ?? retailerInfo.type, variant: "outline" as const }] : []),
-    ...(retailerInfo?.category ? [{ label: CATEGORY_LABELS[retailerInfo.category] ?? retailerInfo.category, variant: "secondary" as const }] : []),
+    ...(retailerInfo?.type
+      ? [
+          {
+            label: RETAILER_TYPE_LABELS[retailerInfo.type] ?? retailerInfo.type,
+            variant: "outline" as const,
+          },
+        ]
+      : []),
+    ...(retailerInfo?.category
+      ? [
+          {
+            label: CATEGORY_LABELS[retailerInfo.category] ?? retailerInfo.category,
+            variant: "secondary" as const,
+          },
+        ]
+      : []),
   ];
 
   return (

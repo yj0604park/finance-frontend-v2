@@ -1,8 +1,4 @@
-query GetAccountList(
-  $after: String!
-  $bankId: ID
-  $isActive: BoolBaseFilterLookup
-) {
+query GetAccountList($after: String!, $bankId: ID, $isActive: BoolBaseFilterLookup) {
   accountRelay(
     order: { name: ASC }
     filters: { isActive: $isActive, bank: { id: { exact: $bankId } } }
@@ -39,10 +35,7 @@ query GetAccountList(
 }
 
 query GetSimpleAccountList($bankId: ID) {
-  accountRelay(
-    filters: { bank: { id: { exact: $bankId } } }
-    order: { name: ASC }
-  ) {
+  accountRelay(filters: { bank: { id: { exact: $bankId } } }, order: { name: ASC }) {
     edges {
       node {
         id
@@ -75,8 +68,16 @@ query GetAccountDetail($accountId: ID) {
   }
 }
 
-mutation UpdateAccount($id: ID!, $name: String, $type: AccountType, $isActive: Boolean, $firstAdded: Boolean) {
-  updateAccount(data: { id: $id, name: $name, type: $type, isActive: $isActive, firstAdded: $firstAdded }) {
+mutation UpdateAccount(
+  $id: ID!
+  $name: String
+  $type: AccountType
+  $isActive: Boolean
+  $firstAdded: Boolean
+) {
+  updateAccount(
+    data: { id: $id, name: $name, type: $type, isActive: $isActive, firstAdded: $firstAdded }
+  ) {
     id
     name
     type

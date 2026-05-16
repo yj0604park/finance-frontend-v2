@@ -1,9 +1,9 @@
 import { format, parseISO, subMonths } from "date-fns";
 import { Link2, Package, Plus, RotateCcw } from "lucide-react";
 import { useState } from "react";
+import { PaginationControls } from "@/components/shared/pagination-controls";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { PaginationControls } from "@/components/shared/pagination-controls";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,

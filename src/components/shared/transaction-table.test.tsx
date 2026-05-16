@@ -2,8 +2,8 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
-import { TransactionTable } from "./transaction-table";
 import type { TransactionRow } from "./transaction-table";
+import { TransactionTable } from "./transaction-table";
 
 const mockTx = (overrides: Partial<TransactionRow> = {}): TransactionRow => ({
   id: "tx-1",
@@ -18,8 +18,7 @@ const mockTx = (overrides: Partial<TransactionRow> = {}): TransactionRow => ({
   ...overrides,
 });
 
-const wrap = (ui: React.ReactElement) =>
-  render(<MemoryRouter>{ui}</MemoryRouter>);
+const wrap = (ui: React.ReactElement) => render(<MemoryRouter>{ui}</MemoryRouter>);
 
 describe("TransactionTable", () => {
   it("renders transaction rows", () => {
@@ -51,22 +50,12 @@ describe("TransactionTable", () => {
   });
 
   it("hides account column when account=false", () => {
-    wrap(
-      <TransactionTable
-        transactions={[{ node: mockTx() }]}
-        columns={{ account: false }}
-      />,
-    );
+    wrap(<TransactionTable transactions={[{ node: mockTx() }]} columns={{ account: false }} />);
     expect(screen.queryByText("신한카드")).not.toBeInTheDocument();
   });
 
   it("hides retailer column when retailer=false", () => {
-    wrap(
-      <TransactionTable
-        transactions={[{ node: mockTx() }]}
-        columns={{ retailer: false }}
-      />,
-    );
+    wrap(<TransactionTable transactions={[{ node: mockTx() }]} columns={{ retailer: false }} />);
     expect(screen.queryByText("맥도날드")).not.toBeInTheDocument();
   });
 
@@ -107,21 +96,12 @@ describe("TransactionTable", () => {
   });
 
   it("wraps in Card with title when title prop given", () => {
-    wrap(
-      <TransactionTable
-        transactions={[]}
-        title="거래 내역"
-      />,
-    );
+    wrap(<TransactionTable transactions={[]} title="거래 내역" />);
     expect(screen.getByText("거래 내역")).toBeInTheDocument();
   });
 
   it("formats date as MM-dd", () => {
-    wrap(
-      <TransactionTable
-        transactions={[{ node: mockTx({ date: "2026-03-15" }) }]}
-      />,
-    );
+    wrap(<TransactionTable transactions={[{ node: mockTx({ date: "2026-03-15" }) }]} />);
     expect(screen.getByText("03-15")).toBeInTheDocument();
   });
 });

@@ -1,19 +1,19 @@
-import { useState, useEffect } from "react";
-import { useUpdateSalaryMutation } from "@/graphql/generated/graphql";
+import Decimal from "decimal.js";
+import { CheckCircle2, Plus, Trash2, XCircle } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, CheckCircle2, XCircle } from "lucide-react";
-import Decimal from "decimal.js";
+import { useUpdateSalaryMutation } from "@/graphql/generated/graphql";
 
 interface SalaryData {
   id: string;
@@ -82,7 +82,10 @@ function KVEditor({ label, pairs, onChange, total }: KVEditorProps) {
         <Label className="text-sm font-medium">{label}</Label>
         <div className="flex items-center gap-2">
           {isValid ? (
-            <Badge variant="outline" className="text-green-600 border-green-300 bg-green-50 text-xs">
+            <Badge
+              variant="outline"
+              className="text-green-600 border-green-300 bg-green-50 text-xs"
+            >
               <CheckCircle2 className="h-3 w-3 mr-1" /> Valid
             </Badge>
           ) : (
@@ -90,7 +93,13 @@ function KVEditor({ label, pairs, onChange, total }: KVEditorProps) {
               <XCircle className="h-3 w-3 mr-1" /> Diff: {diff.toFixed(2)}
             </Badge>
           )}
-          <Button type="button" variant="ghost" size="sm" onClick={add} className="h-6 px-2 text-xs">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={add}
+            className="h-6 px-2 text-xs"
+          >
             <Plus className="h-3 w-3 mr-1" /> Add
           </Button>
         </div>
@@ -200,12 +209,14 @@ export function EditSalaryDialog({ salary, open, onClose, onSaved }: EditSalaryD
   const adjDiff = new Decimal(parseFloat(totalAdjustment) || 0).minus(sumKV(adjustmentPairs)).abs();
   const taxDiff = new Decimal(parseFloat(totalWithheld) || 0).minus(sumKV(taxPairs)).abs();
   const dedDiff = new Decimal(parseFloat(totalDeduction) || 0).minus(sumKV(deductionPairs)).abs();
-  const summaryDiff = new Decimal(parseFloat(netPay) || 0).minus(
-    new Decimal(parseFloat(grossPay) || 0)
-      .plus(parseFloat(totalAdjustment) || 0)
-      .plus(parseFloat(totalWithheld) || 0)
-      .plus(parseFloat(totalDeduction) || 0)
-  ).abs();
+  const summaryDiff = new Decimal(parseFloat(netPay) || 0)
+    .minus(
+      new Decimal(parseFloat(grossPay) || 0)
+        .plus(parseFloat(totalAdjustment) || 0)
+        .plus(parseFloat(totalWithheld) || 0)
+        .plus(parseFloat(totalDeduction) || 0),
+    )
+    .abs();
 
   const handleSave = async () => {
     if (!salary) return;
@@ -241,11 +252,21 @@ export function EditSalaryDialog({ salary, open, onClose, onSaved }: EditSalaryD
 
         <Tabs defaultValue="summary">
           <TabsList className="w-full">
-            <TabsTrigger value="summary" className="flex-1">Summary</TabsTrigger>
-            <TabsTrigger value="pay" className="flex-1">Pay Detail</TabsTrigger>
-            <TabsTrigger value="adjustments" className="flex-1">Adjustments</TabsTrigger>
-            <TabsTrigger value="taxes" className="flex-1">Taxes</TabsTrigger>
-            <TabsTrigger value="deductions" className="flex-1">Deductions</TabsTrigger>
+            <TabsTrigger value="summary" className="flex-1">
+              Summary
+            </TabsTrigger>
+            <TabsTrigger value="pay" className="flex-1">
+              Pay Detail
+            </TabsTrigger>
+            <TabsTrigger value="adjustments" className="flex-1">
+              Adjustments
+            </TabsTrigger>
+            <TabsTrigger value="taxes" className="flex-1">
+              Taxes
+            </TabsTrigger>
+            <TabsTrigger value="deductions" className="flex-1">
+              Deductions
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="summary" className="space-y-4 pt-4">
@@ -309,10 +330,26 @@ export function EditSalaryDialog({ salary, open, onClose, onSaved }: EditSalaryD
             {/* Validity checks */}
             <div className="border rounded-lg p-4 space-y-1 bg-muted/30">
               <p className="text-sm font-semibold mb-2">Validity Checks</p>
-              <ValidityRow label="Gross = sum(payDetail)" isValid={grossDiff.lt(0.01)} diff={grossDiff.toFixed(2)} />
-              <ValidityRow label="Adjustment = sum(adjustmentDetail)" isValid={adjDiff.lt(0.01)} diff={adjDiff.toFixed(2)} />
-              <ValidityRow label="Withheld = sum(taxDetail)" isValid={taxDiff.lt(0.01)} diff={taxDiff.toFixed(2)} />
-              <ValidityRow label="Deduction = sum(deductionDetail)" isValid={dedDiff.lt(0.01)} diff={dedDiff.toFixed(2)} />
+              <ValidityRow
+                label="Gross = sum(payDetail)"
+                isValid={grossDiff.lt(0.01)}
+                diff={grossDiff.toFixed(2)}
+              />
+              <ValidityRow
+                label="Adjustment = sum(adjustmentDetail)"
+                isValid={adjDiff.lt(0.01)}
+                diff={adjDiff.toFixed(2)}
+              />
+              <ValidityRow
+                label="Withheld = sum(taxDetail)"
+                isValid={taxDiff.lt(0.01)}
+                diff={taxDiff.toFixed(2)}
+              />
+              <ValidityRow
+                label="Deduction = sum(deductionDetail)"
+                isValid={dedDiff.lt(0.01)}
+                diff={dedDiff.toFixed(2)}
+              />
               <ValidityRow
                 label="Net = Gross + Adj + Withheld + Ded"
                 isValid={summaryDiff.lt(0.01)}
@@ -322,12 +359,7 @@ export function EditSalaryDialog({ salary, open, onClose, onSaved }: EditSalaryD
           </TabsContent>
 
           <TabsContent value="pay" className="pt-4">
-            <KVEditor
-              label="Pay Detail"
-              pairs={payPairs}
-              onChange={setPayPairs}
-              total={grossPay}
-            />
+            <KVEditor label="Pay Detail" pairs={payPairs} onChange={setPayPairs} total={grossPay} />
           </TabsContent>
 
           <TabsContent value="adjustments" className="pt-4">

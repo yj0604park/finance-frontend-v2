@@ -1,14 +1,9 @@
+import { Check, ChevronsUpDown, Plus } from "lucide-react";
 import { useState } from "react";
-import { useStockOptions, type StockOption } from "@/hooks/use-stock-options";
-import { useCreateStockMutation, CurrencyType } from "@/graphql/generated/graphql";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -16,7 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Check, ChevronsUpDown, Plus } from "lucide-react";
+import { CurrencyType, useCreateStockMutation } from "@/graphql/generated/graphql";
+import { type StockOption, useStockOptions } from "@/hooks/use-stock-options";
 
 interface StockComboboxProps {
   value: string | null;
@@ -48,7 +44,16 @@ export function StockCombobox({ value, onChange, disabled }: StockComboboxProps)
   }
 
   return (
-    <Popover open={open} onOpenChange={(o) => { setOpen(o); if (!o) { setSearch(""); setShowCreate(false); } }}>
+    <Popover
+      open={open}
+      onOpenChange={(o) => {
+        setOpen(o);
+        if (!o) {
+          setSearch("");
+          setShowCreate(false);
+        }
+      }}
+    >
       <PopoverTrigger asChild>
         <button
           type="button"
@@ -107,8 +112,7 @@ export function StockCombobox({ value, onChange, disabled }: StockComboboxProps)
                 className="flex w-full items-center gap-1 rounded px-2 py-1.5 text-xs text-muted-foreground hover:bg-muted"
                 onClick={() => setShowCreate(true)}
               >
-                <Plus className="h-3 w-3" />
-                새 종목 추가
+                <Plus className="h-3 w-3" />새 종목 추가
               </button>
             </div>
           </>
@@ -182,16 +186,30 @@ function CreateStockForm({
           </SelectTrigger>
           <SelectContent>
             {Object.values(CurrencyType).map((c) => (
-              <SelectItem key={c} value={c} className="text-xs">{c}</SelectItem>
+              <SelectItem key={c} value={c} className="text-xs">
+                {c}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
       <div className="flex gap-1 pt-1">
-        <Button type="button" variant="outline" size="sm" className="flex-1 text-xs h-7" onClick={onCancel}>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="flex-1 text-xs h-7"
+          onClick={onCancel}
+        >
           취소
         </Button>
-        <Button type="button" size="sm" className="flex-1 text-xs h-7" onClick={handleSubmit} disabled={saving || !name}>
+        <Button
+          type="button"
+          size="sm"
+          className="flex-1 text-xs h-7"
+          onClick={handleSubmit}
+          disabled={saving || !name}
+        >
           {saving ? "..." : "추가"}
         </Button>
       </div>

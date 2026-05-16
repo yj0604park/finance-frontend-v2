@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
 import { useApolloClient } from "@apollo/client";
+import { useEffect, useState } from "react";
 import {
-  CurrencyType,
+  type CurrencyType,
   GetSnapshotPageDocument,
   type GetSnapshotPageQuery,
   type GetSnapshotPageQueryVariables,
@@ -18,8 +18,6 @@ export function useAllSnapshots({ currency, startDate }: UseAllSnapshotsOptions)
   const client = useApolloClient();
   const [nodes, setNodes] = useState<SnapshotNode[]>([]);
   const [loading, setLoading] = useState(true);
-
-  const key = `${currency}|${startDate ?? ""}`;
 
   useEffect(() => {
     let cancelled = false;
@@ -55,10 +53,13 @@ export function useAllSnapshots({ currency, startDate }: UseAllSnapshotsOptions)
       }
     }
 
-    fetchAll().catch(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key, client]);
+    fetchAll().catch(() => {
+      if (!cancelled) setLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [client, currency, startDate]);
 
   return { nodes, loading };
 }

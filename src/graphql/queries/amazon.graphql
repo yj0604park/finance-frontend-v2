@@ -30,12 +30,7 @@ query GetAmazonOrders($first: Int, $after: String) {
   }
 }
 
-mutation CreateAmazonOrder(
-  $date: Date!
-  $item: String!
-  $isReturned: Boolean
-  $transactionId: ID
-) {
+mutation CreateAmazonOrder($date: Date!, $item: String!, $isReturned: Boolean, $transactionId: ID) {
   createAmazonOrder(
     data: {
       date: $date

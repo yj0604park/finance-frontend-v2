@@ -1,12 +1,16 @@
+import { Building2, CalendarDays, Landmark, RefreshCw } from "lucide-react";
 import { useState } from "react";
-import { useGetBankListQuery, useGetLastTransactionDateQuery, CurrencyType } from "@/graphql/generated/graphql";
-import { formatCurrency, formatDate, getTotalBalance } from "@/lib/format";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
+import {
+  CurrencyType,
+  useGetBankListQuery,
+  useGetLastTransactionDateQuery,
+} from "@/graphql/generated/graphql";
+import { formatCurrency, formatDate, getTotalBalance } from "@/lib/format";
 import { BalanceChart } from "./balance-chart";
 import { BankCard } from "./bank-card";
-import { Landmark, CalendarDays, Building2, RefreshCw } from "lucide-react";
 
 export function DashboardPage() {
   const { data, loading, error } = useGetBankListQuery();

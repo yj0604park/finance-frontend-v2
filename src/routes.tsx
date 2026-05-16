@@ -1,7 +1,7 @@
 import { lazy, Suspense } from "react";
 import { Navigate, type RouteObject } from "react-router-dom";
-import { AuthGuard } from "@/components/shared/auth-guard";
 import { AppShell } from "@/components/layout/app-shell";
+import { AuthGuard } from "@/components/shared/auth-guard";
 
 // Lazy-loaded pages
 const LoginPage = lazy(() =>
@@ -49,7 +49,9 @@ const StockDetailPage = lazy(() =>
   import("@/features/stocks/stock-detail-page").then((m) => ({ default: m.StockDetailPage })),
 );
 const StockTransactionDetailPage = lazy(() =>
-  import("@/features/stocks/stock-transaction-detail-page").then((m) => ({ default: m.StockTransactionDetailPage })),
+  import("@/features/stocks/stock-transaction-detail-page").then((m) => ({
+    default: m.StockTransactionDetailPage,
+  })),
 );
 const ReviewPage = lazy(() =>
   import("@/features/review/review-page").then((m) => ({ default: m.ReviewPage })),

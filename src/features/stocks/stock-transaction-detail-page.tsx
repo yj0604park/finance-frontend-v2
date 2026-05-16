@@ -1,16 +1,16 @@
+import { ArrowLeft, ExternalLink, Unlink } from "lucide-react";
 import { useMemo } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
-import {
-  useGetStockTransactionQuery,
-  useUpdateStockTransactionMutation,
-} from "@/graphql/generated/graphql";
-import { formatCurrency, formatDate } from "@/lib/format";
-import { CATEGORY_LABELS } from "@/lib/constants";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, ExternalLink, Unlink } from "lucide-react";
+import {
+  useGetStockTransactionQuery,
+  useUpdateStockTransactionMutation,
+} from "@/graphql/generated/graphql";
+import { CATEGORY_LABELS } from "@/lib/constants";
+import { formatCurrency, formatDate } from "@/lib/format";
 
 export function StockTransactionDetailPage() {
   const { stockTxId } = useParams<{ stockTxId: string }>();
@@ -69,7 +69,14 @@ export function StockTransactionDetailPage() {
               )}
               {tx?.stock.name ?? "—"}
             </h1>
-            <Badge variant={isBuy ? "default" : "outline"} className={isBuy ? "bg-blue-500/15 text-blue-700 border-blue-300" : "bg-orange-500/15 text-orange-700 border-orange-300"}>
+            <Badge
+              variant={isBuy ? "default" : "outline"}
+              className={
+                isBuy
+                  ? "bg-blue-500/15 text-blue-700 border-blue-300"
+                  : "bg-orange-500/15 text-orange-700 border-orange-300"
+              }
+            >
               {isBuy ? "매수" : "매도"}
             </Badge>
           </div>
@@ -88,8 +95,11 @@ export function StockTransactionDetailPage() {
         </InfoCard>
 
         <InfoCard label="수량" loading={loading}>
-          <p className={`text-lg font-semibold font-mono ${isBuy ? "text-blue-600" : "text-orange-500"}`}>
-            {sharesNum > 0 ? "+" : ""}{tx?.shares ?? "—"}
+          <p
+            className={`text-lg font-semibold font-mono ${isBuy ? "text-blue-600" : "text-orange-500"}`}
+          >
+            {sharesNum > 0 ? "+" : ""}
+            {tx?.shares ?? "—"}
           </p>
         </InfoCard>
 
@@ -100,7 +110,9 @@ export function StockTransactionDetailPage() {
         </InfoCard>
 
         <InfoCard label="총액" loading={loading}>
-          <p className={`text-2xl font-bold font-mono ${Number(tx?.amount ?? 0) < 0 ? "text-red-600" : "text-green-600"}`}>
+          <p
+            className={`text-2xl font-bold font-mono ${Number(tx?.amount ?? 0) < 0 ? "text-red-600" : "text-green-600"}`}
+          >
             {tx ? formatCurrency(tx.amount, currency) : "—"}
           </p>
         </InfoCard>
@@ -119,9 +131,7 @@ export function StockTransactionDetailPage() {
             <CardTitle className="text-sm font-medium text-muted-foreground">메모</CardTitle>
           </CardHeader>
           <CardContent>
-            {loading ? <Skeleton className="h-5 w-48" /> : (
-              <p className="text-base">{tx?.note}</p>
-            )}
+            {loading ? <Skeleton className="h-5 w-48" /> : <p className="text-base">{tx?.note}</p>}
           </CardContent>
         </Card>
       )}
@@ -138,10 +148,13 @@ export function StockTransactionDetailPage() {
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="font-medium">
-                  {tx.relatedTransaction.retailer?.name ?? CATEGORY_LABELS[tx.relatedTransaction.type ?? ""] ?? tx.relatedTransaction.type}
+                  {tx.relatedTransaction.retailer?.name ??
+                    CATEGORY_LABELS[tx.relatedTransaction.type ?? ""] ??
+                    tx.relatedTransaction.type}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {formatDate(tx.relatedTransaction.date)} · {formatCurrency(tx.relatedTransaction.amount, tx.account.currency)}
+                  {formatDate(tx.relatedTransaction.date)} ·{" "}
+                  {formatCurrency(tx.relatedTransaction.amount, tx.account.currency)}
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -189,9 +202,7 @@ function InfoCard({
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">{label}</CardTitle>
       </CardHeader>
-      <CardContent>
-        {loading ? <Skeleton className="h-7 w-28" /> : children}
-      </CardContent>
+      <CardContent>{loading ? <Skeleton className="h-7 w-28" /> : children}</CardContent>
     </Card>
   );
 }

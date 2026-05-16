@@ -24,10 +24,7 @@ query GetSalaryList {
 }
 
 query GetSalaryFiltered($dateMin: Date, $dateMax: Date) {
-  salaryRelay(
-    order: { date: ASC }
-    filters: { date: { gte: $dateMin, lte: $dateMax } }
-  ) {
+  salaryRelay(order: { date: ASC }, filters: { date: { gte: $dateMin, lte: $dateMax } }) {
     edges {
       node {
         date

@@ -1,4 +1,4 @@
-import { ApolloClient, InMemoryCache, createHttpLink, from } from "@apollo/client";
+import { ApolloClient, createHttpLink, from, InMemoryCache } from "@apollo/client";
 import { onError } from "@apollo/client/link/error";
 
 const graphqlEndpoint = import.meta.env.VITE_GRAPHQL_ENDPOINT || "/money/graphql";

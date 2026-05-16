@@ -1,10 +1,6 @@
+import { ChevronRight, Plus, TrendingUp } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  useGetStockListQuery,
-  useCreateStockMutation,
-  CurrencyType,
-} from "@/graphql/generated/graphql";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,9 +13,19 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, TrendingUp, ChevronRight } from "lucide-react";
+import {
+  CurrencyType,
+  useCreateStockMutation,
+  useGetStockListQuery,
+} from "@/graphql/generated/graphql";
 
 function CreateStockDialog({ onCreated }: { onCreated: () => void }) {
   const [open, setOpen] = useState(false);
@@ -83,10 +89,7 @@ function CreateStockDialog({ onCreated }: { onCreated: () => void }) {
           </div>
           <div className="space-y-2">
             <Label htmlFor="stock-currency">통화</Label>
-            <Select
-              value={currency}
-              onValueChange={(v) => setCurrency(v as CurrencyType)}
-            >
+            <Select value={currency} onValueChange={(v) => setCurrency(v as CurrencyType)}>
               <SelectTrigger id="stock-currency">
                 <SelectValue />
               </SelectTrigger>

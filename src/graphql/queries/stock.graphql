@@ -107,9 +107,7 @@ query GetAccountStockTransactions($accountId: ID, $after: String, $first: Int) {
 }
 
 mutation UpdateStockTransaction($id: ID!, $relatedTransactionId: ID) {
-  updateStockTransaction(
-    data: { id: $id, relatedTransaction: { set: $relatedTransactionId } }
-  ) {
+  updateStockTransaction(data: { id: $id, relatedTransaction: { set: $relatedTransactionId } }) {
     id
     relatedTransaction {
       id

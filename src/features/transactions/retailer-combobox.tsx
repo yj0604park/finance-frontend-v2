@@ -1,10 +1,10 @@
-import { useState, useRef, useEffect, useCallback } from "react";
-import { useRetailerOptions } from "@/hooks/use-retailer-options";
-import { CreateRetailerForm } from "@/features/retailers/create-retailer-form";
+import { ChevronDown, X } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ChevronDown, X } from "lucide-react";
+import { CreateRetailerForm } from "@/features/retailers/create-retailer-form";
+import { useRetailerOptions } from "@/hooks/use-retailer-options";
 
 interface RetailerComboboxProps {
   value: string | null;
@@ -20,7 +20,7 @@ export function RetailerCombobox({ value, onChange, disabled }: RetailerCombobox
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
 
-  const selected = value ? retailers.find((r) => r.id === value) ?? null : null;
+  const selected = value ? (retailers.find((r) => r.id === value) ?? null) : null;
 
   const MAX_VISIBLE = 20;
   const trimmed = search.trim();
@@ -103,10 +103,14 @@ export function RetailerCombobox({ value, onChange, disabled }: RetailerCombobox
           </span>
           <span className="flex items-center gap-0.5">
             {selected && !disabled && (
+              // biome-ignore lint/a11y/useSemanticElements: nested button is invalid inside the combobox trigger.
               <span
                 role="button"
                 tabIndex={0}
-                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleClear(e as unknown as React.MouseEvent); }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ")
+                    handleClear(e as unknown as React.MouseEvent);
+                }}
                 onClick={handleClear}
                 className="rounded p-0.5 hover:bg-muted"
               >
@@ -144,7 +148,9 @@ export function RetailerCombobox({ value, onChange, disabled }: RetailerCombobox
             </div>
             <ul ref={listRef} className="max-h-48 overflow-y-auto py-1">
               {!trimmed ? (
-                <li className="px-3 py-4 text-center text-xs text-muted-foreground">검색어를 입력하세요</li>
+                <li className="px-3 py-4 text-center text-xs text-muted-foreground">
+                  검색어를 입력하세요
+                </li>
               ) : filtered.length === 0 ? (
                 <li>
                   <button

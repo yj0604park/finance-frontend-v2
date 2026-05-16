@@ -1,26 +1,25 @@
-import { useState, useEffect } from "react";
+import { Plus } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import {
-  AccountType,
-  CurrencyType,
-  useCreateAccountMutation,
-  useGetAccountListQuery,
-  useGetBankSimpleListQuery,
-} from "@/graphql/generated/graphql";
-import { formatCurrency, formatDate, getDisplayColor } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -30,7 +29,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus } from "lucide-react";
+import {
+  AccountType,
+  CurrencyType,
+  useCreateAccountMutation,
+  useGetAccountListQuery,
+  useGetBankSimpleListQuery,
+} from "@/graphql/generated/graphql";
+import { formatCurrency, formatDate, getDisplayColor } from "@/lib/format";
 
 const ACCOUNT_TYPE_LABELS: Record<string, string> = {
   CHECKING_ACCOUNT: "Checking",
@@ -185,7 +191,9 @@ export function AccountsPage() {
                           </Badge>
                         </TableCell>
                         <TableCell>{account.currency}</TableCell>
-                        <TableCell className={`text-right font-mono ${getDisplayColor(account.amount)}`}>
+                        <TableCell
+                          className={`text-right font-mono ${getDisplayColor(account.amount)}`}
+                        >
                           {formatCurrency(account.amount, account.currency)}
                         </TableCell>
                         <TableCell className="text-muted-foreground text-sm">
@@ -221,7 +229,6 @@ export function AccountsPage() {
     </div>
   );
 }
-
 
 function CreateAccountDialog({
   open,
@@ -270,7 +277,11 @@ function CreateAccountDialog({
         <div className="space-y-4 py-2">
           <div className="space-y-1.5">
             <Label>계좌명</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="계좌명 입력" />
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="계좌명 입력"
+            />
           </div>
           <div className="space-y-1.5">
             <Label>은행</Label>
@@ -316,7 +327,9 @@ function CreateAccountDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>취소</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            취소
+          </Button>
           <Button onClick={handleSubmit} disabled={loading || !name.trim() || !bankId}>
             {loading ? "저장 중..." : "저장"}
           </Button>

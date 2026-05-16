@@ -1,8 +1,17 @@
+import { format, parseISO } from "date-fns";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Legend,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/format";
-import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { format, parseISO } from "date-fns";
 
 interface SalaryBarChartProps {
   data: ReadonlyArray<{ date: string; grossPay: number; netPay: number }>;
@@ -47,10 +56,14 @@ export function SalaryBarChart({ data, loading }: SalaryBarChartProps) {
                   if (!active || !payload?.length) return null;
                   return (
                     <div className="rounded-lg border bg-background p-3 shadow-sm">
-                      <p className="text-xs text-muted-foreground mb-1">{payload[0]?.payload?.date}</p>
+                      <p className="text-xs text-muted-foreground mb-1">
+                        {payload[0]?.payload?.date}
+                      </p>
                       {payload.map((p) => (
                         <p key={p.dataKey as string} className="text-sm">
-                          <span className="font-medium">{p.dataKey === "grossPay" ? "Gross" : "Net"}: </span>
+                          <span className="font-medium">
+                            {p.dataKey === "grossPay" ? "Gross" : "Net"}:{" "}
+                          </span>
                           {formatCurrency(p.value as number, "USD")}
                         </p>
                       ))}

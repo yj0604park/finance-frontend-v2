@@ -3,12 +3,15 @@ import { Decimal } from "decimal.js";
 /**
  * Format a numeric value as a currency string.
  */
-export function formatCurrency(amount: string | number | null | undefined, currency: string): string {
+export function formatCurrency(
+  amount: string | number | null | undefined,
+  currency: string,
+): string {
   const sign = currency === "USD" ? "$" : "₩";
   const digits = currency === "USD" ? 2 : 0;
 
   if (amount == null || amount === "") {
-    return `${sign} 0${digits > 0 ? `.${  "0".repeat(digits)}` : ""}`;
+    return `${sign} 0${digits > 0 ? `.${"0".repeat(digits)}` : ""}`;
   }
 
   const decimal = new Decimal(amount);
@@ -27,7 +30,10 @@ export function formatCurrency(amount: string | number | null | undefined, curre
 /**
  * Format as accounting style: negatives in parentheses, zero as em dash.
  */
-export function formatAccounting(amount: string | number | null | undefined, currency: string): string {
+export function formatAccounting(
+  amount: string | number | null | undefined,
+  currency: string,
+): string {
   const decimal = new Decimal(amount ?? 0);
   if (decimal.isZero()) return "—";
 

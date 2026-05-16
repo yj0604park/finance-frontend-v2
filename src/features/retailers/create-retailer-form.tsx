@@ -1,13 +1,19 @@
 import { useState } from "react";
-import {
-  useCreateRetailerMutation,
-  RetailerType,
-  TransactionCategory,
-} from "@/graphql/generated/graphql";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  RetailerType,
+  TransactionCategory,
+  useCreateRetailerMutation,
+} from "@/graphql/generated/graphql";
 
 export const RETAILER_TYPES: { value: RetailerType; label: string }[] = [
   { value: RetailerType.Restaurant, label: "음식점" },
@@ -46,7 +52,11 @@ interface CreateRetailerFormProps {
   submitLabel?: string;
 }
 
-export function CreateRetailerForm({ onSuccess, onCancel, submitLabel = "추가" }: CreateRetailerFormProps) {
+export function CreateRetailerForm({
+  onSuccess,
+  onCancel,
+  submitLabel = "추가",
+}: CreateRetailerFormProps) {
   const [name, setName] = useState("");
   const [type, setType] = useState<RetailerType>(RetailerType.Etc);
   const [category, setCategory] = useState<TransactionCategory>(TransactionCategory.Etc);
@@ -87,7 +97,9 @@ export function CreateRetailerForm({ onSuccess, onCancel, submitLabel = "추가"
           </SelectTrigger>
           <SelectContent>
             {RETAILER_TYPES.map((t) => (
-              <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+              <SelectItem key={t.value} value={t.value}>
+                {t.label}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -100,14 +112,18 @@ export function CreateRetailerForm({ onSuccess, onCancel, submitLabel = "추가"
           </SelectTrigger>
           <SelectContent>
             {TRANSACTION_CATEGORIES.map((c) => (
-              <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+              <SelectItem key={c.value} value={c.value}>
+                {c.label}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
       <div className="flex justify-end gap-2 pt-1">
         {onCancel && (
-          <Button type="button" variant="outline" size="sm" onClick={onCancel}>취소</Button>
+          <Button type="button" variant="outline" size="sm" onClick={onCancel}>
+            취소
+          </Button>
         )}
         <Button type="submit" size="sm" disabled={loading || !name}>
           {loading ? "저장 중..." : submitLabel}

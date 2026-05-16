@@ -1,9 +1,5 @@
 query GetExchangeList($first: Int!, $after: String!) {
-  exchangeRelay(
-    order: { date: DESC }
-    first: $first
-    after: $after
-  ) {
+  exchangeRelay(order: { date: DESC }, first: $first, after: $after) {
     edges {
       node {
         id

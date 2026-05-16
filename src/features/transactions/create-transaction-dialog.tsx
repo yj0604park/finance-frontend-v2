@@ -1,9 +1,5 @@
 import { useState } from "react";
-import {
-  useCreateTransactionMutation,
-  useCreateTransactionWithoutRetailerMutation,
-  useGetRetailerListQuery,
-} from "@/graphql/generated/graphql";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -15,8 +11,18 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "sonner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  useCreateTransactionMutation,
+  useCreateTransactionWithoutRetailerMutation,
+  useGetRetailerListQuery,
+} from "@/graphql/generated/graphql";
 
 interface CreateTransactionDialogProps {
   accountId: string;
@@ -79,7 +85,9 @@ export function CreateTransactionDialog({
       toast.success("Transaction created");
       onSuccess();
     } catch (err) {
-      toast.error(`Failed to create transaction: ${err instanceof Error ? err.message : "Unknown error"}`);
+      toast.error(
+        `Failed to create transaction: ${err instanceof Error ? err.message : "Unknown error"}`,
+      );
     } finally {
       setSubmitting(false);
     }
@@ -90,9 +98,7 @@ export function CreateTransactionDialog({
       <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
           <DialogTitle>Create Transaction</DialogTitle>
-          <DialogDescription>
-            Add a new transaction to this account ({currency}).
-          </DialogDescription>
+          <DialogDescription>Add a new transaction to this account ({currency}).</DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4 py-4">
@@ -110,22 +116,13 @@ export function CreateTransactionDialog({
             </div>
             <div className="space-y-2">
               <Label htmlFor="date">Date</Label>
-              <Input
-                id="date"
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-              />
+              <Input id="date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
             </div>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="retailer">Retailer</Label>
-            <Select
-              value={retailerId}
-              onValueChange={setRetailerId}
-              disabled={isInternal}
-            >
+            <Select value={retailerId} onValueChange={setRetailerId} disabled={isInternal}>
               <SelectTrigger>
                 <SelectValue placeholder="Select retailer" />
               </SelectTrigger>

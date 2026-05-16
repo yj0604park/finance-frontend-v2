@@ -138,13 +138,7 @@ export function AccountDetailPage() {
         },
       }),
     });
-  }, [
-    decodedId,
-    fetchMoreStockTransactions,
-    isStockAccount,
-    stockTxEndCursor,
-    stockTxHasNextPage,
-  ]);
+  }, [decodedId, fetchMoreStockTransactions, isStockAccount, stockTxEndCursor, stockTxHasNextPage]);
 
   const account = accountData?.accountRelay?.edges?.[0]?.node;
   const allTransactions = txData?.transactionRelay?.edges ?? [];
@@ -191,26 +185,29 @@ export function AccountDetailPage() {
     }
   }
 
-  const handleToggleReviewed = useCallback(async (id: string) => {
-    setToggling((prev) => new Set(prev).add(id));
-    try {
-      await toggleReviewed(id);
-      setLocalReviewed((prev) => {
-        const next = new Map(prev);
-        const current = next.has(id) ? next.get(id) : (reviewedById.get(id) ?? false);
-        next.set(id, !current);
-        return next;
-      });
-    } catch (e) {
-      console.error("Failed to toggle reviewed", e);
-    } finally {
-      setToggling((prev) => {
-        const next = new Set(prev);
-        next.delete(id);
-        return next;
-      });
-    }
-  }, [reviewedById]);
+  const handleToggleReviewed = useCallback(
+    async (id: string) => {
+      setToggling((prev) => new Set(prev).add(id));
+      try {
+        await toggleReviewed(id);
+        setLocalReviewed((prev) => {
+          const next = new Map(prev);
+          const current = next.has(id) ? next.get(id) : (reviewedById.get(id) ?? false);
+          next.set(id, !current);
+          return next;
+        });
+      } catch (e) {
+        console.error("Failed to toggle reviewed", e);
+      } finally {
+        setToggling((prev) => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
+      }
+    },
+    [reviewedById],
+  );
 
   if (!decodedId) {
     return (

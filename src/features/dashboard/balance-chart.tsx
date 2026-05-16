@@ -1,11 +1,19 @@
+import { format, parseISO, subYears } from "date-fns";
 import { useState } from "react";
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { toNumber, formatCurrency } from "@/lib/format";
-import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { format, parseISO, subYears } from "date-fns";
 import { CurrencyType } from "@/graphql/generated/graphql";
 import { useAllSnapshots } from "@/hooks/use-all-snapshots";
+import { formatCurrency, toNumber } from "@/lib/format";
 
 type Period = "1y" | "3y" | "max";
 

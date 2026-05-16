@@ -1,8 +1,9 @@
-import { useParams, useNavigate } from "react-router-dom";
-import { useGetSalaryFilteredQuery, type GetSalaryFilteredQuery } from "@/graphql/generated/graphql";
-import { formatAccountingUSD, formatDate, toNumber } from "@/lib/format";
-import { Button } from "@/components/ui/button";
+import { Decimal } from "decimal.js";
+import { ArrowLeft, Pencil, Plus } from "lucide-react";
+import { useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -13,17 +14,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, Pencil, Plus } from "lucide-react";
-import { Decimal } from "decimal.js";
-import { useMemo, useState } from "react";
-import { SalaryBarChart } from "./salary-bar-chart";
-import { EditSalaryDialog } from "./edit-salary-dialog";
+import {
+  type GetSalaryFilteredQuery,
+  useGetSalaryFilteredQuery,
+} from "@/graphql/generated/graphql";
+import { formatAccountingUSD, formatDate, toNumber } from "@/lib/format";
 import { CreateSalaryDialog } from "./create-salary-dialog";
+import { EditSalaryDialog } from "./edit-salary-dialog";
+import { SalaryBarChart } from "./salary-bar-chart";
 
 export function IncomeYearDetailPage() {
   const { year } = useParams<{ year: string }>();
   const navigate = useNavigate();
-  type SalaryNode = NonNullable<NonNullable<GetSalaryFilteredQuery["salaryRelay"]>["edges"][0]>["node"];
+  type SalaryNode = NonNullable<
+    NonNullable<GetSalaryFilteredQuery["salaryRelay"]>["edges"][0]
+  >["node"];
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [editSalary, setEditSalary] = useState<SalaryNode | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
@@ -73,11 +78,7 @@ export function IncomeYearDetailPage() {
         </Button>
         <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Income {year}</h1>
         <Badge variant="outline">{salaries.length} pay periods</Badge>
-        <Button
-          size="sm"
-          className="ml-auto"
-          onClick={() => setCreateOpen(true)}
-        >
+        <Button size="sm" className="ml-auto" onClick={() => setCreateOpen(true)}>
           <Plus className="h-4 w-4 mr-1" />
           급여 추가
         </Button>
@@ -141,19 +142,23 @@ export function IncomeYearDetailPage() {
                             className="cursor-pointer hover:bg-muted/50"
                             onClick={() => setExpandedId(isExpanded ? null : s.id)}
                           >
-                            <TableCell className="font-medium">
-                              {formatDate(s.date)}
-                            </TableCell>
+                            <TableCell className="font-medium">{formatDate(s.date)}</TableCell>
                             <TableCell className="text-right font-mono">
                               {formatAccountingUSD(s.grossPay)}
                             </TableCell>
-                            <TableCell className={`text-right font-mono ${amountColor(s.totalAdjustment)}`}>
+                            <TableCell
+                              className={`text-right font-mono ${amountColor(s.totalAdjustment)}`}
+                            >
                               {formatAccountingUSD(s.totalAdjustment)}
                             </TableCell>
-                            <TableCell className={`text-right font-mono ${amountColor(s.totalWithheld)}`}>
+                            <TableCell
+                              className={`text-right font-mono ${amountColor(s.totalWithheld)}`}
+                            >
                               {formatAccountingUSD(s.totalWithheld)}
                             </TableCell>
-                            <TableCell className={`text-right font-mono ${amountColor(s.totalDeduction)}`}>
+                            <TableCell
+                              className={`text-right font-mono ${amountColor(s.totalDeduction)}`}
+                            >
                               {formatAccountingUSD(s.totalDeduction)}
                             </TableCell>
                             <TableCell className="text-right font-mono font-semibold">
@@ -177,10 +182,22 @@ export function IncomeYearDetailPage() {
                             <TableRow key={`${s.id}-expanded`} className="bg-muted/30">
                               <TableCell colSpan={7} className="p-4">
                                 <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-                                  <DetailSection title="Pay" data={s.payDetail as Record<string, unknown>} />
-                                  <DetailSection title="Adjustments" data={s.adjustmentDetail as Record<string, unknown>} />
-                                  <DetailSection title="Taxes Withheld" data={s.taxDetail as Record<string, unknown>} />
-                                  <DetailSection title="Deductions" data={s.deductionDetail as Record<string, unknown>} />
+                                  <DetailSection
+                                    title="Pay"
+                                    data={s.payDetail as Record<string, unknown>}
+                                  />
+                                  <DetailSection
+                                    title="Adjustments"
+                                    data={s.adjustmentDetail as Record<string, unknown>}
+                                  />
+                                  <DetailSection
+                                    title="Taxes Withheld"
+                                    data={s.taxDetail as Record<string, unknown>}
+                                  />
+                                  <DetailSection
+                                    title="Deductions"
+                                    data={s.deductionDetail as Record<string, unknown>}
+                                  />
                                 </div>
                               </TableCell>
                             </TableRow>
@@ -194,13 +211,17 @@ export function IncomeYearDetailPage() {
                       <TableCell className="text-right font-mono">
                         {formatAccountingUSD(totals.grossPay.toString())}
                       </TableCell>
-                      <TableCell className={`text-right font-mono ${amountColor(totals.adjustment)}`}>
+                      <TableCell
+                        className={`text-right font-mono ${amountColor(totals.adjustment)}`}
+                      >
                         {formatAccountingUSD(totals.adjustment.toString())}
                       </TableCell>
                       <TableCell className={`text-right font-mono ${amountColor(totals.withheld)}`}>
                         {formatAccountingUSD(totals.withheld.toString())}
                       </TableCell>
-                      <TableCell className={`text-right font-mono ${amountColor(totals.deduction)}`}>
+                      <TableCell
+                        className={`text-right font-mono ${amountColor(totals.deduction)}`}
+                      >
                         {formatAccountingUSD(totals.deduction.toString())}
                       </TableCell>
                       <TableCell className="text-right font-mono">
@@ -220,14 +241,18 @@ export function IncomeYearDetailPage() {
         salary={editSalary}
         open={editSalary !== null}
         onClose={() => setEditSalary(null)}
-        onSaved={() => { void refetch(); }}
+        onSaved={() => {
+          void refetch();
+        }}
       />
 
       <CreateSalaryDialog
         open={createOpen}
         year={Number(year)}
         onClose={() => setCreateOpen(false)}
-        onCreated={() => { void refetch(); }}
+        onCreated={() => {
+          void refetch();
+        }}
       />
     </div>
   );
@@ -271,4 +296,3 @@ function DetailSection({ title, data }: { title: string; data: Record<string, un
     </div>
   );
 }
-

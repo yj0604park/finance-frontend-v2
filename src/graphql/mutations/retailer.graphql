@@ -1,8 +1,4 @@
-mutation CreateRetailer(
-  $name: String!
-  $type: RetailerType!
-  $category: TransactionCategory!
-) {
+mutation CreateRetailer($name: String!, $type: RetailerType!, $category: TransactionCategory!) {
   createRetailer(data: { name: $name, type: $type, category: $category }) {
     id
     name

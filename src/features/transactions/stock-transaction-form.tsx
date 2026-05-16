@@ -1,17 +1,17 @@
+import { AlertTriangle, CheckCircle2, Link, Unlink } from "lucide-react";
 import { useState } from "react";
-import {
-  useCreateStockTransactionMutation,
-  useUpdateStockTransactionMutation,
-  useGetUnlinkedStockTransactionsQuery,
-  useGetAccountStockTransactionsQuery,
-} from "@/graphql/generated/graphql";
-import { StockCombobox } from "@/features/stocks/stock-combobox";
-import type { StockOption } from "@/hooks/use-stock-options";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, CheckCircle2, Link, Unlink } from "lucide-react";
+import { StockCombobox } from "@/features/stocks/stock-combobox";
+import {
+  useCreateStockTransactionMutation,
+  useGetAccountStockTransactionsQuery,
+  useGetUnlinkedStockTransactionsQuery,
+  useUpdateStockTransactionMutation,
+} from "@/graphql/generated/graphql";
+import type { StockOption } from "@/hooks/use-stock-options";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { DateInput } from "./date-input";
 
@@ -71,11 +71,7 @@ export function StockTransactionForm({
           onCancel={onCancel}
         />
       ) : (
-        <LinkMode
-          accountId={accountId}
-          onSuccess={onSuccess}
-          onCancel={onCancel}
-        />
+        <LinkMode accountId={accountId} onSuccess={onSuccess} onCancel={onCancel} />
       )}
     </div>
   );
@@ -140,7 +136,10 @@ function CreateMode({
   // Amount sign warning: buy→amount negative, sell→amount positive
   const amountNum = parseFloat(amount);
   const showAmountWarn =
-    !isNaN(sharesNum) && !isNaN(amountNum) && sharesNum !== 0 && amountNum !== 0 &&
+    !isNaN(sharesNum) &&
+    !isNaN(amountNum) &&
+    sharesNum !== 0 &&
+    amountNum !== 0 &&
     Math.sign(sharesNum) === Math.sign(amountNum);
 
   async function handleSubmit() {
@@ -225,13 +224,7 @@ function CreateMode({
       </div>
 
       <div className="flex items-center gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="text-xs"
-          onClick={recalculate}
-        >
+        <Button type="button" variant="outline" size="sm" className="text-xs" onClick={recalculate}>
           재계산
         </Button>
         <div className="flex-1">
@@ -337,7 +330,10 @@ function LinkMode({
                   <div className="flex items-center gap-1">
                     <span className="font-mono text-muted-foreground">{st.stock.ticker}</span>
                     <span>{formatDate(st.date)}</span>
-                    <Badge variant={Number(st.shares) > 0 ? "secondary" : "outline"} className="text-xs ml-auto">
+                    <Badge
+                      variant={Number(st.shares) > 0 ? "secondary" : "outline"}
+                      className="text-xs ml-auto"
+                    >
                       {Number(st.shares) > 0 ? "매수" : "매도"} {Math.abs(Number(st.shares))}주
                     </Badge>
                   </div>
@@ -408,4 +404,3 @@ function LinkMode({
     </div>
   );
 }
-

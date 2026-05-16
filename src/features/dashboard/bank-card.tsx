@@ -1,7 +1,7 @@
+import { Building2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/format";
-import { Building2 } from "lucide-react";
 
 interface BankBalance {
   currency: string;
@@ -64,9 +64,7 @@ export function BankCard({ bank, colorIdx }: BankCardProps) {
             <span className="text-sm font-bold">{formatCurrency(b.value, b.currency)}</span>
           </div>
         ))}
-        {bank.balance.length === 0 && (
-          <p className="text-xs text-muted-foreground">잔액 없음</p>
-        )}
+        {bank.balance.length === 0 && <p className="text-xs text-muted-foreground">잔액 없음</p>}
       </CardContent>
     </Card>
   );

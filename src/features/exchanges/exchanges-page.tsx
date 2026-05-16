@@ -1,8 +1,7 @@
-import { useGetExchangeListQuery, ExchangeType, CurrencyType } from "@/graphql/generated/graphql";
-import { formatCurrency, formatDate } from "@/lib/format";
-import { Badge } from "@/components/ui/badge";
+import Decimal from "decimal.js";
+import { ArrowLeftRight, Hash, TrendingUp } from "lucide-react";
 import { PaginationControls } from "@/components/shared/pagination-controls";
-import { useCursorPagination } from "@/hooks/use-cursor-pagination";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -13,8 +12,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeftRight, TrendingUp, Hash } from "lucide-react";
-import Decimal from "decimal.js";
+import {
+  type CurrencyType,
+  ExchangeType,
+  useGetExchangeListQuery,
+} from "@/graphql/generated/graphql";
+import { useCursorPagination } from "@/hooks/use-cursor-pagination";
+import { formatCurrency, formatDate } from "@/lib/format";
 
 const PAGE_SIZE = 20;
 
@@ -68,9 +72,7 @@ export function ExchangesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">환전 내역</h1>
-          <p className="text-muted-foreground mt-1 text-sm">
-            외화 환전 거래 내역
-          </p>
+          <p className="text-muted-foreground mt-1 text-sm">외화 환전 거래 내역</p>
         </div>
       </div>
 
@@ -96,9 +98,7 @@ export function ExchangesPage() {
                 <TrendingUp className="h-5 w-5 text-teal-600 dark:text-teal-400" />
               </div>
               <div>
-                <p className="text-muted-foreground text-xs">
-                  평균 환율 (이 페이지, ₩/USD)
-                </p>
+                <p className="text-muted-foreground text-xs">평균 환율 (이 페이지, ₩/USD)</p>
                 <p className="text-2xl font-bold">
                   {avgRatio != null ? `₩ ${Number(avgRatio).toLocaleString("ko-KR")}` : "—"}
                 </p>
@@ -134,10 +134,7 @@ export function ExchangesPage() {
               <TableBody>
                 {exchanges.length === 0 ? (
                   <TableRow>
-                    <TableCell
-                      colSpan={5}
-                      className="text-muted-foreground py-12 text-center"
-                    >
+                    <TableCell colSpan={5} className="text-muted-foreground py-12 text-center">
                       <ArrowLeftRight className="mx-auto mb-2 h-8 w-8 opacity-40" />
                       환전 내역이 없습니다
                     </TableCell>
@@ -169,9 +166,11 @@ export function ExchangesPage() {
                           </div>
                         </TableCell>
                         <TableCell className="font-mono text-sm">
-                          {ex.ratioPerKrw != null
-                            ? `₩ ${Number(ex.ratioPerKrw).toLocaleString("ko-KR", { minimumFractionDigits: 2 })}`
-                            : <span className="text-muted-foreground">—</span>}
+                          {ex.ratioPerKrw != null ? (
+                            `₩ ${Number(ex.ratioPerKrw).toLocaleString("ko-KR", { minimumFractionDigits: 2 })}`
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
                         </TableCell>
                         <TableCell>
                           <Badge

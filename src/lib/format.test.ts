@@ -90,8 +90,22 @@ describe("toNumber", () => {
 
 describe("getTotalBalance", () => {
   const banks = [
-    { node: { balance: [{ currency: "KRW", value: "10000" }, { currency: "USD", value: "50" }] } },
-    { node: { balance: [{ currency: "KRW", value: "5000" }, { currency: "USD", value: "25.5" }] } },
+    {
+      node: {
+        balance: [
+          { currency: "KRW", value: "10000" },
+          { currency: "USD", value: "50" },
+        ],
+      },
+    },
+    {
+      node: {
+        balance: [
+          { currency: "KRW", value: "5000" },
+          { currency: "USD", value: "25.5" },
+        ],
+      },
+    },
   ];
 
   it("sums KRW across all banks", () => {

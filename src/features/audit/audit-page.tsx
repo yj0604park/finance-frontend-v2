@@ -1,13 +1,6 @@
+import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  TransactionCategory,
-  useGetAccountListQuery,
-  useGetAccountMonthCountQuery,
-  useGetInternalTransactionsQuery,
-  useGetUnreviewedTransactionsQuery,
-} from "@/graphql/generated/graphql";
-import { formatCurrency, formatDate } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -18,7 +11,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { AlertTriangle, CheckCircle2 } from "lucide-react";
+import {
+  TransactionCategory,
+  useGetAccountListQuery,
+  useGetAccountMonthCountQuery,
+  useGetInternalTransactionsQuery,
+  useGetUnreviewedTransactionsQuery,
+} from "@/graphql/generated/graphql";
+import { formatCurrency, formatDate } from "@/lib/format";
 
 const ACCOUNT_TYPE_LABELS: Record<string, string> = {
   CHECKING_ACCOUNT: "Checking",
@@ -111,8 +111,7 @@ function InternalMismatchSection() {
   const allInternal = data?.transactionRelay?.edges ?? [];
   // isInternal=true 인데 type≠TRANSFER 이거나 retailer가 있는 경우
   const mismatched = allInternal.filter(
-    (edge) =>
-      edge.node.type !== TransactionCategory.Transfer || edge.node.retailer != null,
+    (edge) => edge.node.type !== TransactionCategory.Transfer || edge.node.retailer != null,
   );
 
   return (
@@ -152,7 +151,9 @@ function InternalMismatchSection() {
                   <span className="ml-1 text-xs text-muted-foreground">{tx.account.bank.name}</span>
                 </TableCell>
                 <TableCell>
-                  <Badge variant="outline" className="text-xs">{tx.type}</Badge>
+                  <Badge variant="outline" className="text-xs">
+                    {tx.type}
+                  </Badge>
                 </TableCell>
                 <TableCell className="text-sm">{tx.retailer?.name ?? "—"}</TableCell>
                 <TableCell
@@ -165,7 +166,9 @@ function InternalMismatchSection() {
                 <TableCell>
                   <div className="flex gap-1 flex-wrap">
                     {issues.map((issue) => (
-                      <Badge key={issue} variant="destructive" className="text-xs">{issue}</Badge>
+                      <Badge key={issue} variant="destructive" className="text-xs">
+                        {issue}
+                      </Badge>
                     ))}
                   </div>
                 </TableCell>
@@ -235,7 +238,9 @@ function CompletenessSection() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="min-w-[140px]">계좌</TableHead>
-                  <TableHead className="min-w-[80px] text-xs text-muted-foreground">첫 거래</TableHead>
+                  <TableHead className="min-w-[80px] text-xs text-muted-foreground">
+                    첫 거래
+                  </TableHead>
                   {months.map((m) => (
                     <TableHead key={m} className="text-center text-xs w-8 px-1">
                       {m}월
@@ -269,9 +274,7 @@ function CompletenessSection() {
                           month={m}
                           firstTx={firstTx}
                           lastTx={lastTx}
-                          onNavigate={() =>
-                            navigate(`/accounts/${encodeURIComponent(account.id)}`)
-                          }
+                          onNavigate={() => navigate(`/accounts/${encodeURIComponent(account.id)}`)}
                         />
                       ))}
                     </TableRow>
@@ -310,17 +313,14 @@ function MonthCell({
   const outOfScope = beforeFirst || afterLast;
 
   if (outOfScope) {
-    return <TableCell className="px-1 text-center"><span className="text-muted-foreground/30 text-xs">—</span></TableCell>;
+    return (
+      <TableCell className="px-1 text-center">
+        <span className="text-muted-foreground/30 text-xs">—</span>
+      </TableCell>
+    );
   }
 
-  return (
-    <MonthCellData
-      accountId={accountId}
-      year={year}
-      month={month}
-      onNavigate={onNavigate}
-    />
-  );
+  return <MonthCellData accountId={accountId} year={year} month={month} onNavigate={onNavigate} />;
 }
 
 function MonthCellData({
@@ -355,8 +355,8 @@ function MonthCellData({
           loading
             ? "bg-muted text-muted-foreground"
             : count === 0
-            ? "bg-red-100 text-red-600 hover:bg-red-200"
-            : "bg-green-100 text-green-700 hover:bg-green-200"
+              ? "bg-red-100 text-red-600 hover:bg-red-200"
+              : "bg-green-100 text-green-700 hover:bg-green-200"
         }`}
       >
         {loading ? "·" : count > 99 ? "99+" : count}
@@ -390,7 +390,10 @@ function UnreviewedSummary() {
             </p>
           )}
         </div>
-        <Badge variant={count > 0 ? "outline" : "secondary"} className={count > 0 ? "border-amber-300 text-amber-700 bg-amber-500/10" : ""}>
+        <Badge
+          variant={count > 0 ? "outline" : "secondary"}
+          className={count > 0 ? "border-amber-300 text-amber-700 bg-amber-500/10" : ""}
+        >
           {count > 0 ? "검토 필요" : "모두 완료"}
         </Badge>
       </CardContent>
@@ -438,10 +441,7 @@ function AuditCard({
             <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0" />
             <CardTitle className="text-base">{title}</CardTitle>
             {!loading && (
-              <Badge
-                variant={count > 0 ? "destructive" : "secondary"}
-                className="ml-auto"
-              >
+              <Badge variant={count > 0 ? "destructive" : "secondary"} className="ml-auto">
                 {count > 0 ? `${count}건` : <CheckCircle2 className="h-3 w-3" />}
               </Badge>
             )}

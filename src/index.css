@@ -69,11 +69,11 @@
   --input: oklch(0.9 0.025 270);
   --ring: oklch(0.5 0.24 264);
   /* Vibrant chart colors */
-  --chart-1: oklch(0.55 0.24 264);   /* indigo */
-  --chart-2: oklch(0.62 0.2 162);    /* teal */
-  --chart-3: oklch(0.72 0.19 84);    /* amber */
-  --chart-4: oklch(0.6 0.22 320);    /* pink */
-  --chart-5: oklch(0.65 0.22 30);    /* orange */
+  --chart-1: oklch(0.55 0.24 264); /* indigo */
+  --chart-2: oklch(0.62 0.2 162); /* teal */
+  --chart-3: oklch(0.72 0.19 84); /* amber */
+  --chart-4: oklch(0.6 0.22 320); /* pink */
+  --chart-5: oklch(0.65 0.22 30); /* orange */
   /* Sidebar: deep indigo */
   --sidebar: oklch(0.28 0.08 264);
   --sidebar-foreground: oklch(0.93 0.03 264);
@@ -139,8 +139,9 @@
     touch-action: manipulation;
   }
   /* Prevent tap highlight on interactive elements */
-  button, a, [role="button"] {
+  button,
+  a,
+  [role="button"] {
     -webkit-tap-highlight-color: transparent;
   }
-
 }

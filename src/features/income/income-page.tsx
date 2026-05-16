@@ -1,6 +1,5 @@
+import { Decimal } from "decimal.js";
 import { useNavigate } from "react-router-dom";
-import { useGetSalaryListQuery } from "@/graphql/generated/graphql";
-import { formatAccountingUSD, toNumber } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -11,7 +10,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Decimal } from "decimal.js";
+import { useGetSalaryListQuery } from "@/graphql/generated/graphql";
+import { formatAccountingUSD, toNumber } from "@/lib/format";
 import { SalaryBarChart } from "./salary-bar-chart";
 
 interface YearSummary {

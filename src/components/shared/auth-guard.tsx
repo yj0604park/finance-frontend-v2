@@ -1,6 +1,6 @@
+import type { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/providers/auth-provider";
-import type { ReactNode } from "react";
 
 export function AuthGuard({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuth();

@@ -1,16 +1,16 @@
-import { useState, useCallback } from "react";
+import { CheckCircle2, RefreshCw } from "lucide-react";
+import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useGetUnreviewedTransactionsQuery } from "@/graphql/generated/graphql";
+import { DateRangeFilter } from "@/components/shared/date-range-filter";
+import { ErrorAlert } from "@/components/shared/error-alert";
+import { PaginationControls } from "@/components/shared/pagination-controls";
+import { TransactionTable } from "@/components/shared/transaction-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle2, RefreshCw } from "lucide-react";
-import { ErrorAlert } from "@/components/shared/error-alert";
-import { DateRangeFilter } from "@/components/shared/date-range-filter";
-import { TransactionTable } from "@/components/shared/transaction-table";
-import { PaginationControls } from "@/components/shared/pagination-controls";
-import { toggleReviewed } from "@/lib/review";
+import { useGetUnreviewedTransactionsQuery } from "@/graphql/generated/graphql";
 import { useCursorPagination } from "@/hooks/use-cursor-pagination";
+import { toggleReviewed } from "@/lib/review";
 
 const PAGE_SIZE = 20;
 
@@ -117,14 +117,8 @@ export function ReviewPage() {
         }}
       >
         {transactions.length > 0 && (
-          <Button
-            variant="default"
-            size="sm"
-            onClick={handleMarkAllReviewed}
-            className="gap-2"
-          >
-            <CheckCircle2 className="h-4 w-4" />
-            이 페이지 전체 완료
+          <Button variant="default" size="sm" onClick={handleMarkAllReviewed} className="gap-2">
+            <CheckCircle2 className="h-4 w-4" />이 페이지 전체 완료
           </Button>
         )}
       </DateRangeFilter>
@@ -134,9 +128,7 @@ export function ReviewPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             미검토 거래
-            {totalCount > 0 && (
-              <Badge variant="secondary">{totalCount}</Badge>
-            )}
+            {totalCount > 0 && <Badge variant="secondary">{totalCount}</Badge>}
           </CardTitle>
         </CardHeader>
         <TransactionTable
@@ -154,7 +146,9 @@ export function ReviewPage() {
           review={{
             localReviewed,
             toggling,
-            onToggle: (id) => { void handleToggle(id); },
+            onToggle: (id) => {
+              void handleToggle(id);
+            },
           }}
           onRowClick={(id) => navigate(`/transactions/${encodeURIComponent(id)}`)}
           emptyMessage="모든 거래가 검토 완료되었습니다!"

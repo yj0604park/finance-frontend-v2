@@ -7,7 +7,7 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "ignore": ["src/graphql/generated/**"]
+    "includes": ["**", "!src/graphql/generated/**"]
   },
   "formatter": {
     "enabled": true,
@@ -29,6 +29,11 @@
     "formatter": {
       "quoteStyle": "double",
       "semicolons": "always"
+    }
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
     }
   },
   "assist": {

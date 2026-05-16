@@ -1,4 +1,11 @@
-query GetAllTransactions($after: String, $first: Int, $accountId: ID, $dateGte: Date, $dateLte: Date, $type: TransactionCategory) {
+query GetAllTransactions(
+  $after: String
+  $first: Int
+  $accountId: ID
+  $dateGte: Date
+  $dateLte: Date
+  $type: TransactionCategory
+) {
   transactionRelay(
     first: $first
     after: $after
@@ -258,21 +265,31 @@ query GetInternalTransactions($after: String!) {
         amount
         type
         isInternal
-        retailer { id name }
-        account { id name currency bank { name } }
+        retailer {
+          id
+          name
+        }
+        account {
+          id
+          name
+          currency
+          bank {
+            name
+          }
+        }
       }
     }
-    pageInfo { hasNextPage endCursor }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
     totalCount
   }
 }
 
 query GetUnlinkedStockTransactions($accountId: ID, $after: String!) {
   transactionRelay(
-    filters: {
-      account: { bank: {}, id: { exact: $accountId } }
-      type: { exact: STOCK }
-    }
+    filters: { account: { bank: {}, id: { exact: $accountId } }, type: { exact: STOCK } }
     order: { date: DESC }
     first: 100
     after: $after

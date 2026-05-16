@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
 import { useApolloClient } from "@apollo/client";
+import { useCallback, useEffect, useState } from "react";
 import {
   GetAllRetailersDocument,
   type GetAllRetailersQuery,
@@ -30,7 +30,9 @@ export function useRetailerOptions(): {
 
   useEffect(() => {
     _listeners.add(setRetailers);
-    return () => { _listeners.delete(setRetailers); };
+    return () => {
+      _listeners.delete(setRetailers);
+    };
   }, []);
 
   useEffect(() => {
@@ -50,14 +52,21 @@ export function useRetailerOptions(): {
         let page = 0;
         while (hasNext && page < MAX_PAGES) {
           page++;
-          const result: { data: GetAllRetailersQuery } = await client.query<GetAllRetailersQuery, GetAllRetailersQueryVariables>({
+          const result: { data: GetAllRetailersQuery } = await client.query<
+            GetAllRetailersQuery,
+            GetAllRetailersQueryVariables
+          >({
             query: GetAllRetailersDocument,
             variables: { after: cursor },
             fetchPolicy: "no-cache",
           });
           const relay: GetAllRetailersQuery["retailerRelay"] = result.data.retailerRelay;
           for (const edge of relay.edges) {
-            all.push({ id: edge.node.id, name: edge.node.name, category: edge.node.category as string });
+            all.push({
+              id: edge.node.id,
+              name: edge.node.name,
+              category: edge.node.category as string,
+            });
           }
           hasNext = relay.pageInfo.hasNextPage;
           cursor = relay.pageInfo.endCursor ?? null;
@@ -80,19 +89,23 @@ export function useRetailerOptions(): {
       });
     }
 
-    _fetchPromise.then((all) => {
-      setRetailers(all ?? []);
-      setLoading(false);
-    }).catch(() => {
-      setLoading(false);
-    });
+    _fetchPromise
+      .then((all) => {
+        setRetailers(all ?? []);
+        setLoading(false);
+      })
+      .catch(() => {
+        setLoading(false);
+      });
   }, [client]);
 
   // Called after server confirms a new retailer was created.
   const addRetailer = useCallback((retailer: RetailerOption) => {
     const updated = [...(_cached ?? []), retailer];
     _cached = updated;
-    _listeners.forEach((fn) => fn(updated));
+    _listeners.forEach((fn) => {
+      fn(updated);
+    });
   }, []);
 
   return { retailers, loading, addRetailer };

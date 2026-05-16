@@ -1,11 +1,8 @@
+import { Decimal } from "decimal.js";
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import {
-  TransactionCategory,
-} from "@/graphql/generated/graphql";
-import { useAllTransactions } from "@/hook/useAllTransactions";
-import { formatCurrency, toNumber } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,9 +13,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -27,13 +29,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Decimal } from "decimal.js";
+import { TransactionCategory } from "@/graphql/generated/graphql";
+import { useAllTransactions } from "@/hook/useAllTransactions";
+import { formatCurrency, toNumber } from "@/lib/format";
 import { CreateRetailerForm } from "./create-retailer-form";
 
-const EXCLUDED_CATEGORIES = new Set([
-  TransactionCategory.Transfer,
-  TransactionCategory.Stock,
-]);
+const EXCLUDED_CATEGORIES = new Set([TransactionCategory.Transfer, TransactionCategory.Stock]);
 
 function CreateRetailerDialog({ onCreated }: { onCreated: () => void }) {
   const [open, setOpen] = useState(false);
@@ -75,26 +76,38 @@ export function RetailersPage() {
   const isThisMonth = year === today.getFullYear() && month === today.getMonth() + 1;
 
   function prevMonth() {
-    if (month === 1) { setYear((y) => y - 1); setMonth(12); }
-    else setMonth((m) => m - 1);
+    if (month === 1) {
+      setYear((y) => y - 1);
+      setMonth(12);
+    } else setMonth((m) => m - 1);
   }
   function nextMonth() {
-    if (month === 12) { setYear((y) => y + 1); setMonth(1); }
-    else setMonth((m) => m + 1);
+    if (month === 12) {
+      setYear((y) => y + 1);
+      setMonth(1);
+    } else setMonth((m) => m + 1);
   }
 
-  const { edges: transactions, loading, error } = useAllTransactions({
+  const {
+    edges: transactions,
+    loading,
+    error,
+  } = useAllTransactions({
     accountId: null,
     dateGte: startDate || null,
     dateLte: endDate || null,
   });
 
   const retailerSummary = useMemo(() => {
-    const map: Record<string, { id: string; name: string; spending: Decimal; income: Decimal; count: number }> = {};
+    const map: Record<
+      string,
+      { id: string; name: string; spending: Decimal; income: Decimal; count: number }
+    > = {};
 
     for (const edge of transactions) {
       const tx = edge.node;
-      if (tx.account.currency !== currency || tx.isInternal || EXCLUDED_CATEGORIES.has(tx.type)) continue;
+      if (tx.account.currency !== currency || tx.isInternal || EXCLUDED_CATEGORIES.has(tx.type))
+        continue;
       const name = tx.retailer?.name ?? "(No Retailer)";
       const key = tx.retailer?.id ?? "__none__";
 
@@ -110,8 +123,7 @@ export function RetailersPage() {
       map[key].count += 1;
     }
 
-    return Object.values(map)
-      .sort((a, b) => b.spending.comparedTo(a.spending));
+    return Object.values(map).sort((a, b) => b.spending.comparedTo(a.spending));
   }, [transactions, currency]);
 
   const top10 = retailerSummary.slice(0, 10);
@@ -120,10 +132,7 @@ export function RetailersPage() {
     spending: toNumber(r.spending.toString()),
   }));
 
-  const totalSpending = retailerSummary.reduce(
-    (acc, r) => acc.plus(r.spending),
-    new Decimal(0),
-  );
+  const totalSpending = retailerSummary.reduce((acc, r) => acc.plus(r.spending), new Decimal(0));
 
   if (error) {
     return (
@@ -141,7 +150,9 @@ export function RetailersPage() {
           <p className="text-muted-foreground mt-1 text-sm">가맹점별 지출 분석</p>
         </div>
         <div className="flex items-center gap-3">
-          <Badge variant="secondary" className="text-sm">{retailerSummary.length}개 가맹점</Badge>
+          <Badge variant="secondary" className="text-sm">
+            {retailerSummary.length}개 가맹점
+          </Badge>
           <CreateRetailerDialog onCreated={() => {}} />
         </div>
       </div>
@@ -167,7 +178,13 @@ export function RetailersPage() {
             <span className="w-20 text-center text-sm font-medium">
               {year}-{String(month).padStart(2, "0")}
             </span>
-            <Button variant="outline" size="icon" className="h-8 w-8" onClick={nextMonth} disabled={isThisMonth}>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={nextMonth}
+              disabled={isThisMonth}
+            >
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
@@ -194,14 +211,17 @@ export function RetailersPage() {
                     <XAxis
                       type="number"
                       tickFormatter={(v: number) =>
-                        currency === "USD" ? `$${(v / 1000).toFixed(0)}k` : `₩${(v / 10000).toFixed(0)}만`
+                        currency === "USD"
+                          ? `$${(v / 1000).toFixed(0)}k`
+                          : `₩${(v / 10000).toFixed(0)}만`
                       }
                     />
                     <YAxis type="category" dataKey="name" width={120} tick={{ fontSize: 12 }} />
                     <Tooltip
-                      formatter={(value: number) =>
-                        [formatCurrency(value.toString(), currency), "Spending"]
-                      }
+                      formatter={(value: number) => [
+                        formatCurrency(value.toString(), currency),
+                        "Spending",
+                      ]}
                     />
                     <Bar dataKey="spending" fill="#6366f1" radius={[0, 4, 4, 0]} />
                   </BarChart>
@@ -243,7 +263,8 @@ export function RetailersPage() {
                         key={r.name}
                         className={r.id !== "__none__" ? "cursor-pointer hover:bg-muted/50" : ""}
                         onClick={() => {
-                          if (r.id !== "__none__") navigate(`/retailers/${encodeURIComponent(r.id)}`);
+                          if (r.id !== "__none__")
+                            navigate(`/retailers/${encodeURIComponent(r.id)}`);
                         }}
                       >
                         <TableCell className="font-medium">
@@ -255,7 +276,9 @@ export function RetailersPage() {
                           </div>
                         </TableCell>
                         <TableCell className="text-right font-mono text-sm text-red-600">
-                          {r.spending.isZero() ? "—" : formatCurrency(r.spending.toString(), currency)}
+                          {r.spending.isZero()
+                            ? "—"
+                            : formatCurrency(r.spending.toString(), currency)}
                         </TableCell>
                         <TableCell className="text-right font-mono text-sm text-foreground">
                           {r.income.isZero() ? "—" : formatCurrency(r.income.toString(), currency)}

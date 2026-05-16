@@ -14,7 +14,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "@/providers/auth-provider";
+import { Separator } from "@/components/ui/separator";
 import {
   Sidebar,
   SidebarContent,
@@ -27,14 +27,12 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { Separator } from "@/components/ui/separator";
+import { useAuth } from "@/providers/auth-provider";
 
 const navGroups = [
   {
     label: "Overview",
-    items: [
-      { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-    ],
+    items: [{ title: "Dashboard", url: "/dashboard", icon: LayoutDashboard }],
   },
   {
     label: "Finance",

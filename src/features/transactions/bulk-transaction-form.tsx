@@ -1,38 +1,56 @@
-import { useState, useCallback, useEffect } from "react";
-import {
-  TransactionCategory,
-  useCreateTransactionFullMutation,
-} from "@/graphql/generated/graphql";
-import { CATEGORY_LABELS } from "@/lib/constants";
+import { differenceInDays, parseISO } from "date-fns";
+import { AlertTriangle, CheckCircle2, ClipboardPaste, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { TransactionCategory, useCreateTransactionFullMutation } from "@/graphql/generated/graphql";
+import { CATEGORY_LABELS } from "@/lib/constants";
 import { AmountInput } from "./amount-input";
 import { DateInput } from "./date-input";
 import { RetailerCombobox } from "./retailer-combobox";
-import { CheckCircle2, Trash2, AlertTriangle, ClipboardPaste } from "lucide-react";
-import { differenceInDays, parseISO } from "date-fns";
 
 const MONTH_MAP: Record<string, string> = {
-  January: "01", February: "02", March: "03", April: "04",
-  May: "05", June: "06", July: "07", August: "08",
-  September: "09", October: "10", November: "11", December: "12",
-  Jan: "01", Feb: "02", Mar: "03", Apr: "04",
-  Jun: "06", Jul: "07", Aug: "08", Sep: "09",
-  Oct: "10", Nov: "11", Dec: "12",
+  January: "01",
+  February: "02",
+  March: "03",
+  April: "04",
+  May: "05",
+  June: "06",
+  July: "07",
+  August: "08",
+  September: "09",
+  October: "10",
+  November: "11",
+  December: "12",
+  Jan: "01",
+  Feb: "02",
+  Mar: "03",
+  Apr: "04",
+  Jun: "06",
+  Jul: "07",
+  Aug: "08",
+  Sep: "09",
+  Oct: "10",
+  Nov: "11",
+  Dec: "12",
 };
 
 function isDateLine(s: string) {
   return (
-    s === "Pending" ||
-    /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(s) ||
-    /^[A-Z][a-z]+ \d{1,2}, \d{4}$/.test(s)
+    s === "Pending" || /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(s) || /^[A-Z][a-z]+ \d{1,2}, \d{4}$/.test(s)
   );
 }
 
 function isAmountLine(s: string) {
   // handles "−$15.00negative …", "$2,500.00", "-$15.00"
-  return /^[−\-]?\$[\d,]+(\.\d+)?/.test(s);
+  return /^[−-]?\$[\d,]+(\.\d+)?/.test(s);
 }
 
 function toISODate(s: string, fallback: string): string {
@@ -53,13 +71,22 @@ function parseAmount(s: string): string {
   return isNeg ? String(-num) : String(num);
 }
 
-function parseStatementText(text: string, defaultDate: string): Pick<TransactionRow, "date" | "note" | "amount">[] {
-  const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+function parseStatementText(
+  text: string,
+  defaultDate: string,
+): Pick<TransactionRow, "date" | "note" | "amount">[] {
+  const lines = text
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
   const results: Pick<TransactionRow, "date" | "note" | "amount">[] = [];
   let i = 0;
 
   while (i < lines.length) {
-    if (!isDateLine(lines[i])) { i++; continue; }
+    if (!isDateLine(lines[i])) {
+      i++;
+      continue;
+    }
 
     const date = toISODate(lines[i], defaultDate);
     i++;
@@ -85,8 +112,6 @@ function parseStatementText(text: string, defaultDate: string): Pick<Transaction
 
   return results;
 }
-
-
 
 interface BulkTransactionFormProps {
   accountId: string;
@@ -180,9 +205,7 @@ export function BulkTransactionForm({
   const [createTransaction] = useCreateTransactionFullMutation();
 
   const updateRow = useCallback((id: string, patch: Partial<TransactionRow>) => {
-    setRows((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, ...patch } : r)),
-    );
+    setRows((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)));
   }, []);
 
   function applyPaste() {
@@ -200,10 +223,10 @@ export function BulkTransactionForm({
     setShowPaste(false);
   }
 
-  function addRow() {
+  const addRow = useCallback(() => {
     const lastDate = rows.length > 0 ? rows[rows.length - 1].date : defaultDate;
     setRows((prev) => [...prev, makeRow(lastDate)]);
-  }
+  }, [defaultDate, rows]);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -215,8 +238,7 @@ export function BulkTransactionForm({
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rows, defaultDate]);
+  }, [addRow]);
 
   function removeRow(id: string) {
     setRows((prev) => prev.filter((r) => r.id !== id));
@@ -305,7 +327,8 @@ export function BulkTransactionForm({
         if (settled.status === "fulfilled") {
           next[idx] = { ...next[idx], status: "success", errorMessage: "" };
         } else {
-          const msg = settled.reason instanceof Error ? settled.reason.message : "오류가 발생했습니다.";
+          const msg =
+            settled.reason instanceof Error ? settled.reason.message : "오류가 발생했습니다.";
           next[idx] = { ...next[idx], status: "error", errorMessage: msg };
         }
       });
@@ -357,7 +380,15 @@ export function BulkTransactionForm({
               신용카드 내역 (금액 부호 반전)
             </label>
             <div className="flex gap-2">
-              <Button type="button" variant="ghost" size="sm" onClick={() => { setShowPaste(false); setPasteText(""); }}>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setShowPaste(false);
+                  setPasteText("");
+                }}
+              >
                 취소
               </Button>
               <Button type="button" size="sm" onClick={applyPaste} disabled={!pasteText.trim()}>
@@ -390,9 +421,7 @@ export function BulkTransactionForm({
                 !isNaN(amountNum) &&
                 amountNum > 0;
               const showIncomeWarn =
-                row.type === TransactionCategory.Income &&
-                !isNaN(amountNum) &&
-                amountNum < 0;
+                row.type === TransactionCategory.Income && !isNaN(amountNum) && amountNum < 0;
               const showRetailerWarn =
                 !row.retailerId &&
                 !row.isInternal &&
@@ -526,7 +555,13 @@ export function BulkTransactionForm({
           + 행 추가
         </Button>
         <div className="flex gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={onCancel} disabled={submitting}>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={onCancel}
+            disabled={submitting}
+          >
             취소
           </Button>
           <Button

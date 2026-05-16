@@ -1,7 +1,7 @@
-import type { ReactNode } from "react";
 import { ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import type { ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface BadgeDef {
@@ -19,24 +19,12 @@ interface PageHeaderProps {
   actions?: ReactNode;
 }
 
-export function PageHeader({
-  title,
-  subtitle,
-  badges,
-  onBack,
-  loading,
-  actions,
-}: PageHeaderProps) {
+export function PageHeader({ title, subtitle, badges, onBack, loading, actions }: PageHeaderProps) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
       <div className="flex items-start gap-3">
         {onBack && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="mt-0.5 shrink-0"
-            onClick={onBack}
-          >
+          <Button variant="ghost" size="icon" className="mt-0.5 shrink-0" onClick={onBack}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
         )}
@@ -52,9 +40,7 @@ export function PageHeader({
                 </Badge>
               ))}
             </div>
-            {subtitle && (
-              <p className="mt-0.5 text-sm text-muted-foreground">{subtitle}</p>
-            )}
+            {subtitle && <p className="mt-0.5 text-sm text-muted-foreground">{subtitle}</p>}
           </div>
         )}
       </div>

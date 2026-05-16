@@ -1,9 +1,9 @@
 import { ApolloProvider } from "@apollo/client";
 import { BrowserRouter, useRoutes } from "react-router-dom";
-import { Toaster } from "@/components/ui/sonner";
 import { ErrorBoundary } from "@/components/shared/error-boundary";
-import { AuthProvider } from "@/providers/auth-provider";
+import { Toaster } from "@/components/ui/sonner";
 import { apolloClient } from "@/lib/apollo";
+import { AuthProvider } from "@/providers/auth-provider";
 import { routes } from "@/routes";
 
 function AppRoutes() {

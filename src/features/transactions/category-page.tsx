@@ -1,12 +1,22 @@
-import { useMemo, useState } from "react";
 import { addMonths, format, getDaysInMonth, parseISO } from "date-fns";
+import { Decimal } from "decimal.js";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
-import { useAllTransactions } from "@/hook/useAllTransactions";
-import { formatCurrency, toNumber } from "@/lib/format";
-import { CATEGORY_LABELS } from "@/lib/constants";
+import { ErrorAlert } from "@/components/shared/error-alert";
+import { TransactionTable } from "@/components/shared/transaction-table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -17,18 +27,23 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { TransactionCategory } from "@/graphql/generated/graphql";
-import { Decimal } from "decimal.js";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useNavigate } from "react-router-dom";
-import { ErrorAlert } from "@/components/shared/error-alert";
-import { TransactionTable } from "@/components/shared/transaction-table";
+import { useAllTransactions } from "@/hook/useAllTransactions";
+import { CATEGORY_LABELS } from "@/lib/constants";
+import { formatCurrency, toNumber } from "@/lib/format";
 
 const CHART_COLORS = [
-  "#6366f1", "#f59e0b", "#10b981", "#ef4444", "#3b82f6",
-  "#8b5cf6", "#ec4899", "#14b8a6", "#f97316", "#84cc16",
-  "#06b6d4", "#a855f7",
+  "#6366f1",
+  "#f59e0b",
+  "#10b981",
+  "#ef4444",
+  "#3b82f6",
+  "#8b5cf6",
+  "#ec4899",
+  "#14b8a6",
+  "#f97316",
+  "#84cc16",
+  "#06b6d4",
+  "#a855f7",
 ];
 
 function monthToRange(ym: string): { start: string; end: string } {
@@ -48,10 +63,16 @@ export function CategoryPage() {
   function shiftMonth(delta: number) {
     try {
       setMonth(format(addMonths(parseISO(`${month}-01`), delta), "yyyy-MM"));
-    } catch { /* invalid */ }
+    } catch {
+      /* invalid */
+    }
   }
 
-  const { edges: transactionEdges, loading, error } = useAllTransactions({
+  const {
+    edges: transactionEdges,
+    loading,
+    error,
+  } = useAllTransactions({
     accountId: null,
     dateGte: startDate || null,
     dateLte: endDate || null,
@@ -137,7 +158,12 @@ export function CategoryPage() {
             </Select>
           </div>
           <div className="flex items-center gap-1.5">
-            <Button variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={() => shiftMonth(-1)}>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-9 w-9 shrink-0"
+              onClick={() => shiftMonth(-1)}
+            >
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <Input
@@ -146,7 +172,12 @@ export function CategoryPage() {
               onChange={(e) => setMonth(e.target.value)}
               className="w-36"
             />
-            <Button variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={() => shiftMonth(1)}>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-9 w-9 shrink-0"
+              onClick={() => shiftMonth(1)}
+            >
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
@@ -193,7 +224,8 @@ export function CategoryPage() {
                             key={`cell-${index.toString()}`}
                             fill={CHART_COLORS[index % CHART_COLORS.length]}
                             opacity={
-                              selectedCategory && selectedCategory !== spendingByCategory[index]?.type
+                              selectedCategory &&
+                              selectedCategory !== spendingByCategory[index]?.type
                                 ? 0.4
                                 : 1
                             }
