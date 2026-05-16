@@ -163,7 +163,7 @@ interface CreateSalaryDialogProps {
 }
 
 export function CreateSalaryDialog({ open, year, onClose, onCreated }: CreateSalaryDialogProps) {
-  const currentYear = isNaN(year) ? new Date().getFullYear() : year;
+  const currentYear = Number.isNaN(year) ? new Date().getFullYear() : year;
   const [date, setDate] = useState(`${currentYear}-01-01`);
   const [grossPay, setGrossPay] = useState("");
   const [totalAdjustment, setTotalAdjustment] = useState("");

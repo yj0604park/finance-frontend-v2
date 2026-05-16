@@ -104,8 +104,8 @@ function CreateMode({
 
   // Derive buy/sell from shares sign
   const sharesNum = parseFloat(shares);
-  const isBuy = !isNaN(sharesNum) && sharesNum > 0;
-  const isSell = !isNaN(sharesNum) && sharesNum < 0;
+  const isBuy = !Number.isNaN(sharesNum) && sharesNum > 0;
+  const isSell = !Number.isNaN(sharesNum) && sharesNum < 0;
 
   // 3-field auto-calc: when exactly one of price/shares/amount is empty, fill it
   function recalculate() {
@@ -120,13 +120,13 @@ function CreateMode({
     const emptyCount = [priceEmpty, sharesEmpty, amountEmpty].filter(Boolean).length;
     if (emptyCount !== 1) return;
 
-    if (priceEmpty && !isNaN(s) && !isNaN(a)) {
+    if (priceEmpty && !Number.isNaN(s) && !Number.isNaN(a)) {
       const calcPrice = Math.abs(a / s);
-      if (isFinite(calcPrice)) setPrice(String(Math.round(calcPrice * 100) / 100));
-    } else if (sharesEmpty && !isNaN(p) && !isNaN(a) && p !== 0) {
+      if (Number.isFinite(calcPrice)) setPrice(String(Math.round(calcPrice * 100) / 100));
+    } else if (sharesEmpty && !Number.isNaN(p) && !Number.isNaN(a) && p !== 0) {
       const calcShares = a / -p; // amount is negative for buy: shares = -amount/price
       setShares(String(Math.round(calcShares * 10000) / 10000));
-    } else if (amountEmpty && !isNaN(p) && !isNaN(s)) {
+    } else if (amountEmpty && !Number.isNaN(p) && !Number.isNaN(s)) {
       // buy: shares+, amount = -price*shares; sell: shares-, amount = price*|shares|
       const calcAmount = -(p * s);
       setAmount(String(Math.round(calcAmount * 100) / 100));
@@ -136,8 +136,8 @@ function CreateMode({
   // Amount sign warning: buy→amount negative, sell→amount positive
   const amountNum = parseFloat(amount);
   const showAmountWarn =
-    !isNaN(sharesNum) &&
-    !isNaN(amountNum) &&
+    !Number.isNaN(sharesNum) &&
+    !Number.isNaN(amountNum) &&
     sharesNum !== 0 &&
     amountNum !== 0 &&
     Math.sign(sharesNum) === Math.sign(amountNum);

@@ -34,17 +34,18 @@ export function IncomePage() {
   for (const edge of salaries) {
     const s = edge.node;
     const year = new Date(s.date).getFullYear();
-    if (!yearMap.has(year)) {
-      yearMap.set(year, {
+    let summary = yearMap.get(year);
+    if (!summary) {
+      summary = {
         year,
         grossPay: new Decimal(0),
         adjustment: new Decimal(0),
         withheld: new Decimal(0),
         deduction: new Decimal(0),
         netPay: new Decimal(0),
-      });
+      };
+      yearMap.set(year, summary);
     }
-    const summary = yearMap.get(year)!;
     summary.grossPay = summary.grossPay.plus(new Decimal(s.grossPay || 0));
     summary.adjustment = summary.adjustment.plus(new Decimal(s.totalAdjustment || 0));
     summary.withheld = summary.withheld.plus(new Decimal(s.totalWithheld || 0));

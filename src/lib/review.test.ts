@@ -1,31 +1,36 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getCsrfToken, toggleReviewed } from "./review";
 
+function setDocumentCookie(value: string) {
+  Object.defineProperty(document, "cookie", {
+    configurable: true,
+    writable: true,
+    value,
+  });
+}
+
 describe("getCsrfToken", () => {
   beforeEach(() => {
-    Object.defineProperty(document, "cookie", {
-      writable: true,
-      value: "",
-    });
+    setDocumentCookie("");
   });
 
   it("returns empty string when cookie is absent", () => {
-    document.cookie = "";
+    setDocumentCookie("");
     expect(getCsrfToken()).toBe("");
   });
 
   it("extracts csrftoken from cookie string", () => {
-    document.cookie = "csrftoken=abc123; sessionid=xyz";
+    setDocumentCookie("csrftoken=abc123; sessionid=xyz");
     expect(getCsrfToken()).toBe("abc123");
   });
 
   it("decodes URI-encoded token", () => {
-    document.cookie = "csrftoken=hello%20world";
+    setDocumentCookie("csrftoken=hello%20world");
     expect(getCsrfToken()).toBe("hello world");
   });
 
   it("handles csrftoken as the only cookie", () => {
-    document.cookie = "csrftoken=tok";
+    setDocumentCookie("csrftoken=tok");
     expect(getCsrfToken()).toBe("tok");
   });
 });

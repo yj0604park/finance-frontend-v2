@@ -418,10 +418,12 @@ export function BulkTransactionForm({
               const showExpenseWarn =
                 row.type &&
                 EXPENSE_TYPES.has(row.type as TransactionCategory) &&
-                !isNaN(amountNum) &&
+                !Number.isNaN(amountNum) &&
                 amountNum > 0;
               const showIncomeWarn =
-                row.type === TransactionCategory.Income && !isNaN(amountNum) && amountNum < 0;
+                row.type === TransactionCategory.Income &&
+                !Number.isNaN(amountNum) &&
+                amountNum < 0;
               const showRetailerWarn =
                 !row.retailerId &&
                 !row.isInternal &&

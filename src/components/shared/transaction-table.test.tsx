@@ -45,7 +45,9 @@ describe("TransactionTable", () => {
         onRowClick={onRowClick}
       />,
     );
-    await userEvent.click(screen.getByText("맥도날드").closest("tr")!);
+    const row = screen.getByText("맥도날드").closest("tr");
+    if (!row) throw new Error("transaction row was not rendered");
+    await userEvent.click(row);
     expect(onRowClick).toHaveBeenCalledWith("tx-99");
   });
 
