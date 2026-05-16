@@ -53,12 +53,14 @@ export function StockDetailPage() {
     skip: !decodedStockId,
   });
 
+  const priceHasNextPage = priceData?.stockPriceRelay.pageInfo.hasNextPage ?? false;
+  const priceEndCursor = priceData?.stockPriceRelay.pageInfo.endCursor;
+
   useEffect(() => {
-    const pageInfo = priceData?.stockPriceRelay.pageInfo;
-    if (!decodedStockId || !pageInfo?.hasNextPage || !pageInfo.endCursor) return;
+    if (!decodedStockId || !priceHasNextPage || !priceEndCursor) return;
 
     void fetchMore({
-      variables: { stockId: decodedStockId, first: 100, after: pageInfo.endCursor },
+      variables: { stockId: decodedStockId, first: 100, after: priceEndCursor },
       updateQuery: (previous, { fetchMoreResult }) => ({
         stockPriceRelay: {
           ...fetchMoreResult.stockPriceRelay,
@@ -66,7 +68,7 @@ export function StockDetailPage() {
         },
       }),
     });
-  }, [decodedStockId, fetchMore, priceData?.stockPriceRelay.pageInfo]);
+  }, [decodedStockId, fetchMore, priceEndCursor, priceHasNextPage]);
 
   const priceRecords = priceData?.stockPriceRelay?.edges ?? [];
 

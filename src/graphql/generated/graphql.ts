@@ -992,10 +992,10 @@ export type StockTransactionFilter = {
   DISTINCT: InputMaybe<Scalars['Boolean']['input']>;
   NOT: InputMaybe<StockTransactionFilter>;
   OR: InputMaybe<StockTransactionFilter>;
-  account: AccountFilter;
+  account: InputMaybe<AccountFilter>;
   date: InputMaybe<DateDateFilterLookup>;
   id: InputMaybe<IdBaseFilterLookup>;
-  stock: StockFilter;
+  stock: InputMaybe<StockFilter>;
 };
 
 export type StockTransactionInput = {
@@ -2962,10 +2962,7 @@ export type GetSnapshotPageSuspenseQueryHookResult = ReturnType<typeof useGetSna
 export type GetSnapshotPageQueryResult = Apollo.QueryResult<GetSnapshotPageQuery, GetSnapshotPageQueryVariables>;
 export const GetStockTransactionDocument = gql`
     query GetStockTransaction($id: ID!) {
-  stockTransactionRelay(
-    filters: {stock: {}, account: {bank: {}}, id: {exact: $id}}
-    first: 1
-  ) {
+  stockTransactionRelay(filters: {id: {exact: $id}}, first: 1) {
     edges {
       node {
         id
@@ -3146,7 +3143,7 @@ export type GetAllStocksQueryResult = Apollo.QueryResult<GetAllStocksQuery, GetA
 export const GetAccountStockTransactionsDocument = gql`
     query GetAccountStockTransactions($accountId: ID, $after: String, $first: Int) {
   stockTransactionRelay(
-    filters: {stock: {}, account: {bank: {}, id: {exact: $accountId}}}
+    filters: {account: {bank: {}, id: {exact: $accountId}}}
     order: {date: DESC}
     first: $first
     after: $after

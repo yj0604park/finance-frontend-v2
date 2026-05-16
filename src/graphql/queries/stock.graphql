@@ -1,8 +1,5 @@
 query GetStockTransaction($id: ID!) {
-  stockTransactionRelay(
-    filters: { stock: {}, account: { bank: {} }, id: { exact: $id } }
-    first: 1
-  ) {
+  stockTransactionRelay(filters: { id: { exact: $id } }, first: 1) {
     edges {
       node {
         id
@@ -73,7 +70,7 @@ query GetAllStocks($after: String) {
 
 query GetAccountStockTransactions($accountId: ID, $after: String, $first: Int) {
   stockTransactionRelay(
-    filters: { stock: {}, account: { bank: {}, id: { exact: $accountId } } }
+    filters: { account: { bank: {}, id: { exact: $accountId } } }
     order: { date: DESC }
     first: $first
     after: $after

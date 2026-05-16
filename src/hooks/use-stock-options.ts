@@ -16,12 +16,14 @@ export function useStockOptions() {
     fetchPolicy: "cache-first",
   });
 
+  const hasNextPage = data?.stockRelay.pageInfo.hasNextPage ?? false;
+  const endCursor = data?.stockRelay.pageInfo.endCursor;
+
   useEffect(() => {
-    const pageInfo = data?.stockRelay.pageInfo;
-    if (!pageInfo?.hasNextPage || !pageInfo.endCursor) return;
+    if (!hasNextPage || !endCursor) return;
 
     void fetchMore({
-      variables: { after: pageInfo.endCursor },
+      variables: { after: endCursor },
       updateQuery: (previous, { fetchMoreResult }) => ({
         stockRelay: {
           ...fetchMoreResult.stockRelay,
@@ -29,7 +31,7 @@ export function useStockOptions() {
         },
       }),
     });
-  }, [data?.stockRelay.pageInfo, fetchMore]);
+  }, [endCursor, fetchMore, hasNextPage]);
 
   const stocks: StockOption[] = (data?.stockRelay?.edges ?? []).map((e) => ({
     id: e.node.id,
