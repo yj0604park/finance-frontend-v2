@@ -1,95 +1,54 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useApolloClient } from "@apollo/client";
-import {
-  GetAllTransactionsDocument,
-  type GetAllTransactionsQuery,
-  type GetAllTransactionsQueryVariables,
-  useGetSimpleAccountListQuery,
-} from "@/graphql/generated/graphql";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DateRangeFilter } from "@/components/shared/date-range-filter";
 import { ErrorAlert } from "@/components/shared/error-alert";
-import { TransactionTable } from "@/components/shared/transaction-table";
 import { PaginationControls } from "@/components/shared/pagination-controls";
+import { TransactionTable } from "@/components/shared/transaction-table";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  TransactionCategory,
+  useGetAllTransactionsQuery,
+  useGetSimpleAccountListQuery,
+} from "@/graphql/generated/graphql";
+import { useCursorPagination } from "@/hooks/use-cursor-pagination";
+import { CATEGORY_LABELS } from "@/lib/constants";
 
-const PAGE_SIZE = 10;
-const FETCH_BATCH = 100;
-
-type TxEdge = GetAllTransactionsQuery["transactionRelay"]["edges"][number];
+const PAGE_SIZE = 50;
 
 export function TransactionsPage() {
   const navigate = useNavigate();
-  const client = useApolloClient();
   const [accountFilter, setAccountFilter] = useState<string>("all");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
-  const [currentPage, setCurrentPage] = useState(1);
-
-  const [allEdges, setAllEdges] = useState<TxEdge[]>([]);
-  const [loadingMore, setLoadingMore] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const pagination = useCursorPagination();
 
   const { data: accountData } = useGetSimpleAccountListQuery();
   const accounts = accountData?.accountRelay?.edges ?? [];
 
-  const filterKey = `${accountFilter}|${startDate}|${endDate}`;
-  const filterKeyRef = useRef(filterKey);
+  const { data, loading, error } = useGetAllTransactionsQuery({
+    variables: {
+      first: PAGE_SIZE,
+      after: pagination.cursor,
+      accountId: accountFilter === "all" ? null : accountFilter,
+      dateGte: startDate || null,
+      dateLte: endDate || null,
+      type: categoryFilter === "all" ? null : (categoryFilter as TransactionCategory),
+    },
+    fetchPolicy: "cache-first",
+  });
 
-  useEffect(() => {
-    filterKeyRef.current = filterKey;
-    let cancelled = false;
-    setAllEdges([]);
-    setLoadingMore(true);
-    setError(null);
-    setCurrentPage(1);
-
-    async function fetchAll() {
-      const accumulated: TxEdge[] = [];
-      let cursor = "";
-      let hasNext = true;
-
-      try {
-        while (hasNext) {
-          const result = await client.query<GetAllTransactionsQuery, GetAllTransactionsQueryVariables>({
-            query: GetAllTransactionsDocument,
-            variables: {
-              first: FETCH_BATCH,
-              after: cursor,
-              accountId: accountFilter === "all" ? null : accountFilter,
-              dateGte: startDate || null,
-              dateLte: endDate || null,
-            },
-            fetchPolicy: "cache-first",
-          });
-          if (cancelled || filterKeyRef.current !== filterKey) return;
-
-          accumulated.push(...result.data.transactionRelay.edges);
-          setAllEdges([...accumulated]); // show data progressively
-          hasNext = result.data.transactionRelay.pageInfo.hasNextPage;
-          cursor = result.data.transactionRelay.pageInfo.endCursor ?? "";
-          if (!cursor) break;
-        }
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e : new Error(String(e)));
-      } finally {
-        if (!cancelled) setLoadingMore(false);
-      }
-    }
-
-    void fetchAll();
-    return () => { cancelled = true; };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterKey]);
-
-  const totalCount = allEdges.length;
-  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
-  const pagedTransactions = allEdges.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
-  // While loading, show skeleton only if we have no data yet
-  const showSkeleton = loadingMore && totalCount === 0;
-
+  const transactions = data?.transactionRelay.edges ?? [];
+  const pageInfo = data?.transactionRelay.pageInfo;
+  const totalCount = data?.transactionRelay.totalCount ?? 0;
   if (error) {
     return <ErrorAlert error={error} prefix="Failed to load transactions" />;
   }
@@ -99,8 +58,8 @@ export function TransactionsPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Transactions</h1>
         <div className="flex items-center gap-2">
-          {loadingMore && totalCount > 0 && (
-            <span className="text-xs text-muted-foreground animate-pulse">{totalCount}건 로딩 중…</span>
+          {loading && transactions.length > 0 && (
+            <span className="text-xs text-muted-foreground animate-pulse">새로고침 중…</span>
           )}
           <Badge variant="outline">{totalCount} total</Badge>
         </div>
@@ -110,13 +69,22 @@ export function TransactionsPage() {
       <DateRangeFilter
         startDate={startDate}
         endDate={endDate}
-        onStartChange={(v) => { setStartDate(v); }}
-        onEndChange={(v) => { setEndDate(v); }}
+        onStartChange={(v) => {
+          setStartDate(v);
+          pagination.reset();
+        }}
+        onEndChange={(v) => {
+          setEndDate(v);
+          pagination.reset();
+        }}
       >
         <div className="w-full sm:w-52">
           <Select
             value={accountFilter}
-            onValueChange={(v) => { setAccountFilter(v); }}
+            onValueChange={(v) => {
+              setAccountFilter(v);
+              pagination.reset();
+            }}
           >
             <SelectTrigger>
               <SelectValue placeholder="All Accounts" />
@@ -131,13 +99,34 @@ export function TransactionsPage() {
             </SelectContent>
           </Select>
         </div>
+        <div className="w-full sm:w-52">
+          <Select
+            value={categoryFilter}
+            onValueChange={(v) => {
+              setCategoryFilter(v);
+              pagination.reset();
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="All Categories" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              {Object.values(TransactionCategory).map((category) => (
+                <SelectItem key={category} value={category}>
+                  {CATEGORY_LABELS[category] ?? category}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </DateRangeFilter>
 
       {/* Table */}
       <Card>
         <TransactionTable
-          transactions={pagedTransactions}
-          loading={showSkeleton}
+          transactions={transactions}
+          loading={loading && transactions.length === 0}
           columns={{
             account: true,
             accountMobileHidden: true,
@@ -157,14 +146,13 @@ export function TransactionsPage() {
       {/* Pagination */}
       {totalCount > 0 && (
         <PaginationControls
-          currentPage={currentPage}
+          currentPage={pagination.currentPage}
           totalCount={totalCount}
           pageSize={PAGE_SIZE}
-          canPrev={currentPage > 1}
-          canNext={currentPage < totalPages}
-          onPrev={() => setCurrentPage((p) => p - 1)}
-          onNext={() => setCurrentPage((p) => p + 1)}
-          onGoToPage={setCurrentPage}
+          canPrev={pagination.canPrev}
+          canNext={!!pageInfo?.hasNextPage}
+          onPrev={pagination.goPrev}
+          onNext={() => pagination.goNext(pageInfo?.endCursor)}
         />
       )}
     </div>

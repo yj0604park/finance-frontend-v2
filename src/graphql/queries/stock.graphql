@@ -54,8 +54,8 @@ query GetStockList {
   }
 }
 
-query GetAllStocks {
-  stockRelay(first: 500) {
+query GetAllStocks($after: String) {
+  stockRelay(first: 100, after: $after) {
     edges {
       node {
         id
@@ -63,6 +63,10 @@ query GetAllStocks {
         name
         currency
       }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
     }
   }
 }

@@ -20,8 +20,6 @@ function setup(startDate = "2026-03-01", endDate = "2026-03-31") {
 describe("DateRangeFilter", () => {
   it("renders start and end date inputs", () => {
     setup();
-    const inputs = screen.getAllByRole("textbox");
-    // date inputs may not be role=textbox in all environments; fallback:
     const dateInputs = document.querySelectorAll("input[type='date']");
     expect(dateInputs).toHaveLength(2);
   });

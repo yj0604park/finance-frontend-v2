@@ -1331,6 +1331,7 @@ input TransactionOrder {
 
 input TransactionPartialInput {
   id: ID!
+  date: Date
   type: TransactionCategory
   retailer: OneToManyInput
   note: String

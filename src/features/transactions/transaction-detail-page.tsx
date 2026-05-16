@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ArrowLeft, CheckCircle2, Circle, RefreshCw, Save } from "lucide-react";
+import { DateInput } from "./date-input";
 
 function getCsrfToken(): string {
   const match = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
@@ -68,6 +69,7 @@ export function TransactionDetailPage() {
   const tx = data?.transactionRelay?.edges?.[0]?.node;
 
   // Edit form state — initialized from tx when it loads
+  const [editDate, setEditDate] = useState<string | null>(null);
   const [editCategory, setEditCategory] = useState<string | null>(null);
   const [editRetailerId, setEditRetailerId] = useState<string | null>(null);
   const [editNote, setEditNote] = useState<string | null>(null);
@@ -86,6 +88,7 @@ export function TransactionDetailPage() {
   });
 
   // Derived display values (prefer edit state, fall back to loaded data)
+  const displayDate = editDate ?? tx?.date ?? "";
   const displayCategory = editCategory ?? tx?.type ?? "";
   const displayRetailerId = editRetailerId ?? tx?.retailer?.id ?? "__none__";
   const displayNote = editNote ?? tx?.note ?? "";
@@ -116,6 +119,7 @@ export function TransactionDetailPage() {
     void updateTransaction({
       variables: {
         id: tx.id,
+        date: displayDate || null,
         type: (displayCategory || null) as TransactionCategory | null,
         retailerId: (displayRetailerId === "__none__" ? null : displayRetailerId) || null,
         note: displayNote || null,
@@ -292,6 +296,12 @@ export function TransactionDetailPage() {
             </div>
           ) : (
             <>
+              {/* Date */}
+              <div className="space-y-2">
+                <Label>날짜</Label>
+                <DateInput value={displayDate} onChange={setEditDate} />
+              </div>
+
               {/* Category */}
               <div className="space-y-2">
                 <Label htmlFor="category">분류 (카테고리)</Label>

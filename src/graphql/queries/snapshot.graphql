@@ -1,8 +1,9 @@
-query GetAmountSnapshots($startDate: Date) {
-  krwSnapshot: amountSnapshotRelay(
+query GetSnapshotPage($currency: CurrencyType!, $startDate: Date, $after: String) {
+  amountSnapshotRelay(
+    first: 100
+    after: $after
     order: { date: ASC }
-    filters: { currency: { exact: KRW }, date: { gte: $startDate } }
-    last: 100
+    filters: { currency: { exact: $currency }, date: { gte: $startDate } }
   ) {
     edges {
       node {
@@ -13,20 +14,9 @@ query GetAmountSnapshots($startDate: Date) {
         summary
       }
     }
-  }
-  usdSnapshot: amountSnapshotRelay(
-    order: { date: ASC }
-    filters: { currency: { exact: USD }, date: { gte: $startDate } }
-    last: 100
-  ) {
-    edges {
-      node {
-        id
-        amount
-        currency
-        date
-        summary
-      }
+    pageInfo {
+      hasNextPage
+      endCursor
     }
   }
 }

@@ -1,23 +1,32 @@
-import { useState, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { Decimal } from "decimal.js";
 import {
-  AccountType,
-  useGetAccountDetailQuery,
-  useGetTransactionListQuery,
-  useUpdateAccountMutation,
-} from "@/graphql/generated/graphql";
-import { formatCurrency, formatDate, getDisplayColor } from "@/lib/format";
+  CalendarDays,
+  CheckCircle2,
+  Hash,
+  Landmark,
+  Pencil,
+  Plus,
+  RefreshCw,
+  TrendingUp,
+} from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { PageHeader } from "@/components/shared/page-header";
+import { PaginationControls } from "@/components/shared/pagination-controls";
+import { StatsCard } from "@/components/shared/stats-card";
+import { TransactionTable } from "@/components/shared/transaction-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -25,8 +34,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -35,16 +44,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CalendarDays, CheckCircle2, Hash, Landmark, Pencil, Plus, TrendingUp } from "lucide-react";
 import { BulkTransactionForm } from "@/features/transactions/bulk-transaction-form";
 import { StockTransactionForm } from "@/features/transactions/stock-transaction-form";
 import {
+  AccountType,
+  useGetAccountDetailQuery,
   useGetAccountStockTransactionsQuery,
+  useGetTransactionListQuery,
+  useUpdateAccountMutation,
 } from "@/graphql/generated/graphql";
-import { PageHeader } from "@/components/shared/page-header";
-import { StatsCard } from "@/components/shared/stats-card";
-import { TransactionTable } from "@/components/shared/transaction-table";
-import { PaginationControls } from "@/components/shared/pagination-controls";
+import { useCursorPagination } from "@/hooks/use-cursor-pagination";
+import { formatCurrency, formatDate, getDisplayColor } from "@/lib/format";
 import { toggleReviewed } from "@/lib/review";
 
 const PAGE_SIZE = 50;
@@ -68,12 +78,16 @@ export function AccountDetailPage() {
   const [showUnreviewedOnly, setShowUnreviewedOnly] = useState(false);
   const [toggling, setToggling] = useState<Set<string>>(new Set());
   const [localReviewed, setLocalReviewed] = useState<Map<string, boolean>>(new Map());
-  const [cursor, setCursor] = useState<string | null>(null);
-  const [cursorStack, setCursorStack] = useState<string[]>([]);
+  const pagination = useCursorPagination();
+  const [updatingBalance, setUpdatingBalance] = useState(false);
 
   const decodedId = accountId ? decodeURIComponent(accountId) : undefined;
 
-  const { data: accountData, loading: accountLoading, refetch: refetchAccount } = useGetAccountDetailQuery({
+  const {
+    data: accountData,
+    loading: accountLoading,
+    refetch: refetchAccount,
+  } = useGetAccountDetailQuery({
     variables: { accountId: decodedId ?? null },
     skip: !decodedId,
   });
@@ -88,7 +102,7 @@ export function AccountDetailPage() {
     variables: {
       accountId: decodedId ?? null,
       first: PAGE_SIZE,
-      after: cursor ?? "",
+      after: pagination.cursor,
     },
     skip: !decodedId,
   });
@@ -97,18 +111,54 @@ export function AccountDetailPage() {
 
   const {
     data: stockTxData,
+    loading: stockTxLoading,
+    error: stockTxError,
     refetch: refetchStockTransactions,
+    fetchMore: fetchMoreStockTransactions,
   } = useGetAccountStockTransactionsQuery({
     variables: { accountId: decodedId ?? null, first: 100, after: "" },
     skip: !decodedId || !isStockAccount,
   });
+
+  const stockTxHasNextPage = stockTxData?.stockTransactionRelay.pageInfo.hasNextPage ?? false;
+  const stockTxEndCursor = stockTxData?.stockTransactionRelay.pageInfo.endCursor;
+
+  useEffect(() => {
+    if (!decodedId || !isStockAccount || !stockTxHasNextPage || !stockTxEndCursor) return;
+
+    void fetchMoreStockTransactions({
+      variables: { accountId: decodedId, first: 100, after: stockTxEndCursor },
+      updateQuery: (previous, { fetchMoreResult }) => ({
+        stockTransactionRelay: {
+          ...fetchMoreResult.stockTransactionRelay,
+          edges: [
+            ...previous.stockTransactionRelay.edges,
+            ...fetchMoreResult.stockTransactionRelay.edges,
+          ],
+        },
+      }),
+    });
+  }, [
+    decodedId,
+    fetchMoreStockTransactions,
+    isStockAccount,
+    stockTxEndCursor,
+    stockTxHasNextPage,
+  ]);
 
   const account = accountData?.accountRelay?.edges?.[0]?.node;
   const allTransactions = txData?.transactionRelay?.edges ?? [];
   const currency = txData?.accountRelay?.edges?.[0]?.node?.currency ?? account?.currency ?? "KRW";
   const pageInfo = txData?.transactionRelay?.pageInfo;
   const totalCount = txData?.transactionRelay?.totalCount ?? 0;
-  const currentPage = cursorStack.length + 1;
+  const reviewedById = useMemo(
+    () => new Map(allTransactions.map((edge) => [edge.node.id, edge.node.reviewed ?? false])),
+    [allTransactions],
+  );
+  const stockHoldings = useMemo(
+    () => buildCurrentStockHoldings(stockTxData?.stockTransactionRelay.edges ?? []),
+    [stockTxData?.stockTransactionRelay.edges],
+  );
 
   // 미검토 필터 (로컬 상태 반영)
   const transactions = showUnreviewedOnly
@@ -121,17 +171,25 @@ export function AccountDetailPage() {
     : allTransactions;
 
   const handleNextPage = () => {
-    if (!pageInfo?.endCursor) return;
-    setCursorStack((prev) => [...prev, cursor ?? ""]);
-    setCursor(pageInfo.endCursor ?? null);
+    pagination.goNext(pageInfo?.endCursor);
   };
 
   const handlePrevPage = () => {
-    const stack = [...cursorStack];
-    const prev = stack.pop() ?? null;
-    setCursorStack(stack);
-    setCursor(prev);
+    pagination.goPrev();
   };
+
+  async function handleUpdateBalance() {
+    if (!decodedId) return;
+    // Account IDs are raw Django PKs (not base64 relay IDs)
+    const numericId = /^\d+$/.test(decodedId) ? decodedId : atob(decodedId).split(":")[1];
+    setUpdatingBalance(true);
+    try {
+      await fetch(`/money/update_balance/${numericId}`);
+      await Promise.all([refetchAccount(), refetchTransactions()]);
+    } finally {
+      setUpdatingBalance(false);
+    }
+  }
 
   const handleToggleReviewed = useCallback(async (id: string) => {
     setToggling((prev) => new Set(prev).add(id));
@@ -139,7 +197,7 @@ export function AccountDetailPage() {
       await toggleReviewed(id);
       setLocalReviewed((prev) => {
         const next = new Map(prev);
-        const current = next.has(id) ? next.get(id) : false;
+        const current = next.has(id) ? next.get(id) : (reviewedById.get(id) ?? false);
         next.set(id, !current);
         return next;
       });
@@ -152,7 +210,7 @@ export function AccountDetailPage() {
         return next;
       });
     }
-  }, []);
+  }, [reviewedById]);
 
   if (!decodedId) {
     return (
@@ -167,7 +225,15 @@ export function AccountDetailPage() {
         { label: account.bank.name, variant: "outline" as const },
         { label: ACCOUNT_TYPE_LABELS[account.type] || account.type, variant: "secondary" as const },
         ...(!account.isActive ? [{ label: "비활성", variant: "destructive" as const }] : []),
-        ...(account.firstAdded ? [{ label: "첫 거래부터", variant: "outline" as const, className: "text-green-600 border-green-600" }] : []),
+        ...(account.firstAdded
+          ? [
+              {
+                label: "첫 거래부터",
+                variant: "outline" as const,
+                className: "text-green-600 border-green-600",
+              },
+            ]
+          : []),
       ]
     : [];
 
@@ -214,11 +280,7 @@ export function AccountDetailPage() {
               </div>
             </CardContent>
           </Card>
-          <StatsCard
-            icon={Hash}
-            label="총 거래 수"
-            value={totalCount > 0 ? totalCount : "—"}
-          />
+          <StatsCard icon={Hash} label="총 거래 수" value={totalCount > 0 ? totalCount : "—"} />
         </div>
       )}
 
@@ -251,7 +313,7 @@ export function AccountDetailPage() {
 
       {/* Transactions */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <div className="flex flex-row items-center justify-between px-6">
           <CardTitle>거래 내역</CardTitle>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
@@ -275,8 +337,17 @@ export function AccountDetailPage() {
               <Plus className="mr-1 h-4 w-4" />
               거래 추가
             </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleUpdateBalance}
+              disabled={updatingBalance}
+            >
+              <RefreshCw className={`mr-1 h-4 w-4 ${updatingBalance ? "animate-spin" : ""}`} />
+              잔액 업데이트
+            </Button>
           </div>
-        </CardHeader>
+        </div>
         <TransactionTable
           transactions={transactions}
           loading={txLoading}
@@ -294,19 +365,23 @@ export function AccountDetailPage() {
           review={{
             localReviewed,
             toggling,
-            onToggle: (id) => { void handleToggleReviewed(id); },
+            onToggle: (id) => {
+              void handleToggleReviewed(id);
+            },
           }}
           onRowClick={(id) => navigate(`/transactions/${encodeURIComponent(id)}`)}
-          emptyMessage={showUnreviewedOnly ? "모든 거래가 검토 완료되었습니다!" : "거래 내역이 없습니다"}
+          emptyMessage={
+            showUnreviewedOnly ? "모든 거래가 검토 완료되었습니다!" : "거래 내역이 없습니다"
+          }
           skeletonRows={5}
         />
         {totalCount > PAGE_SIZE && (
           <CardContent className="border-t px-4 py-3">
             <PaginationControls
-              currentPage={currentPage}
+              currentPage={pagination.currentPage}
               totalCount={totalCount}
               pageSize={PAGE_SIZE}
-              canPrev={cursorStack.length > 0}
+              canPrev={pagination.canPrev}
               canNext={!!pageInfo?.hasNextPage}
               onPrev={handlePrevPage}
               onNext={handleNextPage}
@@ -316,7 +391,14 @@ export function AccountDetailPage() {
       </Card>
 
       {isStockAccount && (
-        <StockTransactionsSection data={stockTxData} />
+        <>
+          <StockHoldingsSection
+            holdings={stockHoldings}
+            loading={stockTxLoading}
+            error={stockTxError}
+          />
+          <StockTransactionsSection data={stockTxData} loading={stockTxLoading} />
+        </>
       )}
 
       {account && (
@@ -336,8 +418,107 @@ export function AccountDetailPage() {
 }
 
 type StockTxData = ReturnType<typeof useGetAccountStockTransactionsQuery>["data"];
+type StockTxEdge = NonNullable<StockTxData>["stockTransactionRelay"]["edges"][number];
 
-function StockTransactionsSection({ data }: { data: StockTxData }) {
+interface StockHolding {
+  stock: StockTxEdge["node"]["stock"];
+  balance: Decimal;
+  lastDate: string;
+}
+
+function formatQuantity(value: Decimal): string {
+  return value.toFixed(4).replace(/(\.\d*?[1-9])0+$|\.0+$/, "$1");
+}
+
+function buildCurrentStockHoldings(edges: StockTxEdge[]): StockHolding[] {
+  const latestByStock = new Map<string, StockHolding>();
+
+  for (const { node } of edges) {
+    if (latestByStock.has(node.stock.id) || node.balance == null) continue;
+
+    const balance = new Decimal(node.balance);
+    if (balance.abs().lessThanOrEqualTo("0.0001")) continue;
+
+    latestByStock.set(node.stock.id, {
+      stock: node.stock,
+      balance,
+      lastDate: node.date,
+    });
+  }
+
+  return [...latestByStock.values()].sort((a, b) =>
+    (a.stock.ticker ?? a.stock.name).localeCompare(b.stock.ticker ?? b.stock.name),
+  );
+}
+
+function StockHoldingsSection({
+  holdings,
+  loading,
+  error,
+}: {
+  holdings: StockHolding[];
+  loading: boolean;
+  error?: Error;
+}) {
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="flex items-center gap-2">
+          <TrendingUp className="h-4 w-4" />
+          현재 보유 종목
+          {holdings.length > 0 && (
+            <Badge variant="secondary" className="text-xs">
+              {holdings.length}종목
+            </Badge>
+          )}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-0">
+        {error ? (
+          <div className="p-6 text-sm text-destructive">보유 종목 로드 실패: {error.message}</div>
+        ) : loading && holdings.length === 0 ? (
+          <div className="space-y-2 p-6">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={`holding-skeleton-${i.toString()}`} className="h-10 w-full" />
+            ))}
+          </div>
+        ) : holdings.length === 0 ? (
+          <div className="p-6 text-sm text-muted-foreground">현재 보유 중인 종목이 없습니다.</div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>종목</TableHead>
+                <TableHead className="text-right">보유 수량</TableHead>
+                <TableHead>최근 거래일</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {holdings.map((holding) => (
+                <TableRow key={holding.stock.id}>
+                  <TableCell>
+                    <span className="font-mono text-xs text-muted-foreground mr-1">
+                      {holding.stock.ticker}
+                    </span>
+                    <span className="text-sm">{holding.stock.name}</span>
+                  </TableCell>
+                  <TableCell className="text-right font-mono text-sm">
+                    {formatQuantity(holding.balance)}
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {formatDate(holding.lastDate)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function StockTransactionsSection({ data, loading }: { data: StockTxData; loading: boolean }) {
   const navigate = useNavigate();
   const edges = data?.stockTransactionRelay?.edges ?? [];
   const totalCount = data?.stockTransactionRelay?.totalCount ?? 0;
@@ -349,12 +530,20 @@ function StockTransactionsSection({ data }: { data: StockTxData }) {
           <TrendingUp className="h-4 w-4" />
           주식 거래 내역
           {totalCount > 0 && (
-            <Badge variant="secondary" className="text-xs">{totalCount}건</Badge>
+            <Badge variant="secondary" className="text-xs">
+              {totalCount}건
+            </Badge>
           )}
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-        {edges.length === 0 ? (
+        {loading && edges.length === 0 ? (
+          <div className="space-y-2 p-6">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={`stock-tx-skeleton-${i.toString()}`} className="h-10 w-full" />
+            ))}
+          </div>
+        ) : edges.length === 0 ? (
           <div className="p-6 text-sm text-muted-foreground">주식 거래 내역이 없습니다.</div>
         ) : (
           <Table>
@@ -380,18 +569,27 @@ function StockTransactionsSection({ data }: { data: StockTxData }) {
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() => navigate(`/stock-transactions/${encodeURIComponent(st.id)}`)}
                   >
-                    <TableCell className="text-sm whitespace-nowrap">{formatDate(st.date)}</TableCell>
+                    <TableCell className="text-sm whitespace-nowrap">
+                      {formatDate(st.date)}
+                    </TableCell>
                     <TableCell>
-                      <span className="font-mono text-xs text-muted-foreground mr-1">{st.stock.ticker}</span>
+                      <span className="font-mono text-xs text-muted-foreground mr-1">
+                        {st.stock.ticker}
+                      </span>
                       <span className="text-sm">{st.stock.name}</span>
                     </TableCell>
-                    <TableCell className={`text-right font-mono text-sm ${isBuy ? "text-blue-600" : "text-orange-500"}`}>
-                      {sharesNum > 0 ? "+" : ""}{sharesNum}
+                    <TableCell
+                      className={`text-right font-mono text-sm ${isBuy ? "text-blue-600" : "text-orange-500"}`}
+                    >
+                      {sharesNum > 0 ? "+" : ""}
+                      {sharesNum}
                     </TableCell>
                     <TableCell className="text-right font-mono text-sm">
                       {formatCurrency(st.price, st.stock.currency)}
                     </TableCell>
-                    <TableCell className={`text-right font-mono text-sm ${Number(st.amount) < 0 ? "text-red-500" : "text-green-600"}`}>
+                    <TableCell
+                      className={`text-right font-mono text-sm ${Number(st.amount) < 0 ? "text-red-500" : "text-green-600"}`}
+                    >
                       {formatCurrency(st.amount, st.stock.currency)}
                     </TableCell>
                     <TableCell className="text-right font-mono text-sm text-muted-foreground">
@@ -401,10 +599,17 @@ function StockTransactionsSection({ data }: { data: StockTxData }) {
                       {st.relatedTransaction ? (
                         <CheckCircle2 className="h-4 w-4 text-green-500" />
                       ) : (
-                        <Badge variant="outline" className="text-xs text-amber-600 border-amber-400">미연결</Badge>
+                        <Badge
+                          variant="outline"
+                          className="text-xs text-amber-600 border-amber-400"
+                        >
+                          미연결
+                        </Badge>
                       )}
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{st.note ?? "—"}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {st.note ?? "—"}
+                    </TableCell>
                   </TableRow>
                 );
               })}
@@ -416,8 +621,6 @@ function StockTransactionsSection({ data }: { data: StockTxData }) {
   );
 }
 
-
-
 interface EditAccountDialogProps {
   account: {
     id: string;
@@ -428,7 +631,12 @@ interface EditAccountDialogProps {
   };
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (values: { name: string; type: AccountType; isActive: boolean; firstAdded: boolean }) => Promise<void>;
+  onSave: (values: {
+    name: string;
+    type: AccountType;
+    isActive: boolean;
+    firstAdded: boolean;
+  }) => Promise<void>;
 }
 
 function EditAccountDialog({ account, open, onOpenChange, onSave }: EditAccountDialogProps) {
@@ -456,11 +664,7 @@ function EditAccountDialog({ account, open, onOpenChange, onSave }: EditAccountD
         <div className="space-y-4 py-2">
           <div className="space-y-1">
             <Label htmlFor="edit-name">이름</Label>
-            <Input
-              id="edit-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
+            <Input id="edit-name" value={name} onChange={(e) => setName(e.target.value)} />
           </div>
           <div className="space-y-1">
             <Label htmlFor="edit-type">계좌 유형</Label>
@@ -470,7 +674,9 @@ function EditAccountDialog({ account, open, onOpenChange, onSave }: EditAccountD
               </SelectTrigger>
               <SelectContent>
                 {Object.entries(ACCOUNT_TYPE_LABELS).map(([val, label]) => (
-                  <SelectItem key={val} value={val}>{label}</SelectItem>
+                  <SelectItem key={val} value={val}>
+                    {label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -490,7 +696,9 @@ function EditAccountDialog({ account, open, onOpenChange, onSave }: EditAccountD
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>취소</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            취소
+          </Button>
           <Button onClick={handleSave} disabled={saving}>
             {saving ? "저장 중..." : "저장"}
           </Button>

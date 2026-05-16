@@ -1,13 +1,17 @@
-import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
+import { ArrowLeft, Plus, TrendingUp } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import {
-  useGetStockListQuery,
-  useGetStockPricesQuery,
-  useCreateStockPriceMutation,
-  CurrencyType,
-} from "@/graphql/generated/graphql";
-import { formatCurrency, formatDate } from "@/lib/format";
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,16 +27,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
-import { ArrowLeft, TrendingUp, Plus } from "lucide-react";
-import { toast } from "sonner";
+  CurrencyType,
+  useCreateStockPriceMutation,
+  useGetStockListQuery,
+  useGetStockPricesQuery,
+} from "@/graphql/generated/graphql";
+import { formatCurrency, formatDate } from "@/lib/format";
 
 export function StockDetailPage() {
   const { stockId } = useParams<{ stockId: string }>();
@@ -41,24 +41,40 @@ export function StockDetailPage() {
   const { data: stockListData, loading: stockLoading } = useGetStockListQuery();
 
   const decodedStockId = stockId ? decodeURIComponent(stockId) : undefined;
-  const stock = stockListData?.stockRelay?.edges.find(
-    (e) => e.node.id === decodedStockId,
-  )?.node;
+  const stock = stockListData?.stockRelay?.edges.find((e) => e.node.id === decodedStockId)?.node;
 
-  const { data: priceData, loading: priceLoading, refetch } = useGetStockPricesQuery({
-    variables: { stockId: decodedStockId ?? "", first: 200, after: "" },
+  const {
+    data: priceData,
+    loading: priceLoading,
+    refetch,
+    fetchMore,
+  } = useGetStockPricesQuery({
+    variables: { stockId: decodedStockId ?? "", first: 100, after: "" },
     skip: !decodedStockId,
   });
+
+  useEffect(() => {
+    const pageInfo = priceData?.stockPriceRelay.pageInfo;
+    if (!decodedStockId || !pageInfo?.hasNextPage || !pageInfo.endCursor) return;
+
+    void fetchMore({
+      variables: { stockId: decodedStockId, first: 100, after: pageInfo.endCursor },
+      updateQuery: (previous, { fetchMoreResult }) => ({
+        stockPriceRelay: {
+          ...fetchMoreResult.stockPriceRelay,
+          edges: [...previous.stockPriceRelay.edges, ...fetchMoreResult.stockPriceRelay.edges],
+        },
+      }),
+    });
+  }, [decodedStockId, fetchMore, priceData?.stockPriceRelay.pageInfo]);
 
   const priceRecords = priceData?.stockPriceRelay?.edges ?? [];
 
   // Chart data — oldest first
-  const chartData = [...priceRecords]
-    .reverse()
-    .map((e) => ({
-      date: e.node.date,
-      price: parseFloat(e.node.price),
-    }));
+  const chartData = [...priceRecords].reverse().map((e) => ({
+    date: e.node.date,
+    price: parseFloat(e.node.price),
+  }));
 
   // Form state
   const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd"));
@@ -88,7 +104,9 @@ export function StockDetailPage() {
       <div className="space-y-6">
         <Skeleton className="h-10 w-48" />
         <div className="grid gap-4 sm:grid-cols-3">
-          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-28" />)}
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-28" />
+          ))}
         </div>
       </div>
     );
@@ -128,9 +146,7 @@ export function StockDetailPage() {
               {stock.currency}
             </Badge>
           </div>
-          {stock.ticker && (
-            <p className="text-muted-foreground mt-0.5 text-sm">{stock.name}</p>
-          )}
+          {stock.ticker && <p className="text-muted-foreground mt-0.5 text-sm">{stock.name}</p>}
         </div>
       </div>
 
@@ -174,9 +190,7 @@ export function StockDetailPage() {
               </div>
               <div>
                 <p className="text-muted-foreground text-xs">기록 수</p>
-                <p className="text-xl font-bold">
-                  {priceData?.stockPriceRelay?.totalCount ?? 0}
-                </p>
+                <p className="text-xl font-bold">{priceData?.stockPriceRelay?.totalCount ?? 0}</p>
               </div>
             </div>
           </CardContent>

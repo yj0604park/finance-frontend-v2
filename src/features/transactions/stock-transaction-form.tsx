@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, CheckCircle2, Link, Unlink } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { DateInput } from "./date-input";
 
 interface StockTransactionFormProps {
   accountId: string;
@@ -174,12 +175,7 @@ function CreateMode({
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <Label className="text-xs">날짜</Label>
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="h-8 w-full rounded border border-input bg-background px-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-          />
+          <DateInput value={date} onChange={setDate} />
         </div>
         <div className="space-y-1">
           <Label className="text-xs">종목</Label>

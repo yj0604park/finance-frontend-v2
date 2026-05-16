@@ -1,8 +1,8 @@
-import { useState } from "react";
 import { useGetExchangeListQuery, ExchangeType, CurrencyType } from "@/graphql/generated/graphql";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { PaginationControls } from "@/components/shared/pagination-controls";
+import { useCursorPagination } from "@/hooks/use-cursor-pagination";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -33,11 +33,10 @@ const EXCHANGE_TYPE_COLORS: Record<ExchangeType, string> = {
 };
 
 export function ExchangesPage() {
-  const [cursor, setCursor] = useState<string>("");
-  const [cursorStack, setCursorStack] = useState<string[]>([]);
+  const pagination = useCursorPagination();
 
   const { data, loading, error } = useGetExchangeListQuery({
-    variables: { first: PAGE_SIZE, after: cursor },
+    variables: { first: PAGE_SIZE, after: pagination.cursor },
   });
 
   const exchanges = data?.exchangeRelay?.edges ?? [];
@@ -55,20 +54,6 @@ export function ExchangesPage() {
           .div(ratios.length)
           .toFixed(2)
       : null;
-
-  function handleNext() {
-    if (pageInfo?.endCursor) {
-      setCursorStack((prev) => [...prev, cursor]);
-      setCursor(pageInfo.endCursor ?? "");
-    }
-  }
-
-  function handlePrev() {
-    const stack = [...cursorStack];
-    const prev = stack.pop() ?? "";
-    setCursorStack(stack);
-    setCursor(prev);
-  }
 
   if (error) {
     return (
@@ -207,29 +192,15 @@ export function ExchangesPage() {
       </Card>
 
       {/* Pagination */}
-      <div className="flex items-center justify-between">
-        <span className="text-muted-foreground text-sm">
-          페이지 {cursorStack.length + 1} · {exchanges.length} / {totalCount}
-        </span>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handlePrev}
-            disabled={cursorStack.length === 0}
-          >
-            이전
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleNext}
-            disabled={!pageInfo?.hasNextPage}
-          >
-            다음
-          </Button>
-        </div>
-      </div>
+      <PaginationControls
+        currentPage={pagination.currentPage}
+        totalCount={totalCount}
+        pageSize={PAGE_SIZE}
+        canPrev={pagination.canPrev}
+        canNext={!!pageInfo?.hasNextPage}
+        onPrev={pagination.goPrev}
+        onNext={() => pagination.goNext(pageInfo?.endCursor)}
+      />
     </div>
   );
 }

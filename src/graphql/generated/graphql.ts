@@ -1197,6 +1197,7 @@ export type TransactionOrder = {
 };
 
 export type TransactionPartialInput = {
+  date: InputMaybe<Scalars['Date']['input']>;
   id: Scalars['ID']['input'];
   isInternal: InputMaybe<Scalars['Boolean']['input']>;
   note: InputMaybe<Scalars['String']['input']>;
@@ -1475,10 +1476,12 @@ export type GetRetailerTypeQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type GetRetailerTypeQuery = { __typename?: 'Query', __type: { __typename?: '__Type', name: string | null, enumValues: Array<{ __typename?: '__EnumValue', name: string }> | null } | null };
 
-export type GetAllRetailersQueryVariables = Exact<{ [key: string]: never; }>;
+export type GetAllRetailersQueryVariables = Exact<{
+  after: InputMaybe<Scalars['String']['input']>;
+}>;
 
 
-export type GetAllRetailersQuery = { __typename?: 'Query', retailerRelay: { __typename?: 'RetailerNodeConnection', edges: Array<{ __typename?: 'RetailerNodeEdge', node: { __typename?: 'RetailerNode', id: string, name: string, category: TransactionCategory } }> } };
+export type GetAllRetailersQuery = { __typename?: 'Query', retailerRelay: { __typename?: 'RetailerNodeConnection', edges: Array<{ __typename?: 'RetailerNodeEdge', node: { __typename?: 'RetailerNode', id: string, name: string, category: TransactionCategory } }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor: string | null } } };
 
 export type GetSalaryListQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1503,12 +1506,14 @@ export type GetSalarySummaryQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type GetSalarySummaryQuery = { __typename?: 'Query', salarySummary: Array<{ __typename?: 'SalarySummaryNode', year: number, totalGrossPay: string }> };
 
-export type GetAmountSnapshotsQueryVariables = Exact<{
+export type GetSnapshotPageQueryVariables = Exact<{
+  currency: CurrencyType;
   startDate: InputMaybe<Scalars['Date']['input']>;
+  after: InputMaybe<Scalars['String']['input']>;
 }>;
 
 
-export type GetAmountSnapshotsQuery = { __typename?: 'Query', krwSnapshot: { __typename?: 'AmountSnapshotNodeConnection', edges: Array<{ __typename?: 'AmountSnapshotNodeEdge', node: { __typename?: 'AmountSnapshotNode', id: string, amount: string, currency: CurrencyType, date: string, summary: Record<string, unknown> | null } }> }, usdSnapshot: { __typename?: 'AmountSnapshotNodeConnection', edges: Array<{ __typename?: 'AmountSnapshotNodeEdge', node: { __typename?: 'AmountSnapshotNode', id: string, amount: string, currency: CurrencyType, date: string, summary: Record<string, unknown> | null } }> } };
+export type GetSnapshotPageQuery = { __typename?: 'Query', amountSnapshotRelay: { __typename?: 'AmountSnapshotNodeConnection', edges: Array<{ __typename?: 'AmountSnapshotNodeEdge', node: { __typename?: 'AmountSnapshotNode', id: string, amount: string, currency: CurrencyType, date: string, summary: Record<string, unknown> | null } }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor: string | null } } };
 
 export type GetStockTransactionQueryVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -1522,10 +1527,12 @@ export type GetStockListQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type GetStockListQuery = { __typename?: 'Query', stockRelay: { __typename?: 'StockNodeConnection', totalCount: number | null, edges: Array<{ __typename?: 'StockNodeEdge', node: { __typename?: 'StockNode', id: string, ticker: string | null, name: string, currency: CurrencyType } }> } };
 
-export type GetAllStocksQueryVariables = Exact<{ [key: string]: never; }>;
+export type GetAllStocksQueryVariables = Exact<{
+  after: InputMaybe<Scalars['String']['input']>;
+}>;
 
 
-export type GetAllStocksQuery = { __typename?: 'Query', stockRelay: { __typename?: 'StockNodeConnection', edges: Array<{ __typename?: 'StockNodeEdge', node: { __typename?: 'StockNode', id: string, ticker: string | null, name: string, currency: CurrencyType } }> } };
+export type GetAllStocksQuery = { __typename?: 'Query', stockRelay: { __typename?: 'StockNodeConnection', edges: Array<{ __typename?: 'StockNodeEdge', node: { __typename?: 'StockNode', id: string, ticker: string | null, name: string, currency: CurrencyType } }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor: string | null } } };
 
 export type GetAccountStockTransactionsQueryVariables = Exact<{
   accountId: InputMaybe<Scalars['ID']['input']>;
@@ -1590,6 +1597,7 @@ export type GetAllTransactionsQueryVariables = Exact<{
   accountId: InputMaybe<Scalars['ID']['input']>;
   dateGte: InputMaybe<Scalars['Date']['input']>;
   dateLte: InputMaybe<Scalars['Date']['input']>;
+  type: InputMaybe<TransactionCategory>;
 }>;
 
 
@@ -1684,6 +1692,7 @@ export type GetAccountMonthCountQuery = { __typename?: 'Query', transactionRelay
 
 export type UpdateTransactionMutationVariables = Exact<{
   id: Scalars['ID']['input'];
+  date: InputMaybe<Scalars['Date']['input']>;
   type: InputMaybe<TransactionCategory>;
   retailerId: InputMaybe<Scalars['ID']['input']>;
   note: InputMaybe<Scalars['String']['input']>;
@@ -1691,7 +1700,7 @@ export type UpdateTransactionMutationVariables = Exact<{
 }>;
 
 
-export type UpdateTransactionMutation = { __typename?: 'Mutation', updateTransaction: { __typename?: 'TransactionNode', id: string, type: TransactionCategory, note: string | null, isInternal: boolean, reviewed: boolean, retailer: { __typename?: 'RetailerNode', id: string, name: string } | null } };
+export type UpdateTransactionMutation = { __typename?: 'Mutation', updateTransaction: { __typename?: 'TransactionNode', id: string, date: string, type: TransactionCategory, note: string | null, isInternal: boolean, reviewed: boolean, retailer: { __typename?: 'RetailerNode', id: string, name: string } | null } };
 
 
 export const CreateRetailerDocument = gql`
@@ -2630,14 +2639,18 @@ export type GetRetailerTypeLazyQueryHookResult = ReturnType<typeof useGetRetaile
 export type GetRetailerTypeSuspenseQueryHookResult = ReturnType<typeof useGetRetailerTypeSuspenseQuery>;
 export type GetRetailerTypeQueryResult = Apollo.QueryResult<GetRetailerTypeQuery, GetRetailerTypeQueryVariables>;
 export const GetAllRetailersDocument = gql`
-    query GetAllRetailers {
-  retailerRelay(first: 1000) {
+    query GetAllRetailers($after: String) {
+  retailerRelay(first: 100, after: $after) {
     edges {
       node {
         id
         name
         category
       }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
     }
   }
 }
@@ -2655,6 +2668,7 @@ export const GetAllRetailersDocument = gql`
  * @example
  * const { data, loading, error } = useGetAllRetailersQuery({
  *   variables: {
+ *      after: // value for 'after'
  *   },
  * });
  */
@@ -2884,12 +2898,13 @@ export type GetSalarySummaryQueryHookResult = ReturnType<typeof useGetSalarySumm
 export type GetSalarySummaryLazyQueryHookResult = ReturnType<typeof useGetSalarySummaryLazyQuery>;
 export type GetSalarySummarySuspenseQueryHookResult = ReturnType<typeof useGetSalarySummarySuspenseQuery>;
 export type GetSalarySummaryQueryResult = Apollo.QueryResult<GetSalarySummaryQuery, GetSalarySummaryQueryVariables>;
-export const GetAmountSnapshotsDocument = gql`
-    query GetAmountSnapshots($startDate: Date) {
-  krwSnapshot: amountSnapshotRelay(
+export const GetSnapshotPageDocument = gql`
+    query GetSnapshotPage($currency: CurrencyType!, $startDate: Date, $after: String) {
+  amountSnapshotRelay(
+    first: 100
+    after: $after
     order: {date: ASC}
-    filters: {currency: {exact: KRW}, date: {gte: $startDate}}
-    last: 100
+    filters: {currency: {exact: $currency}, date: {gte: $startDate}}
   ) {
     edges {
       node {
@@ -2900,60 +2915,51 @@ export const GetAmountSnapshotsDocument = gql`
         summary
       }
     }
-  }
-  usdSnapshot: amountSnapshotRelay(
-    order: {date: ASC}
-    filters: {currency: {exact: USD}, date: {gte: $startDate}}
-    last: 100
-  ) {
-    edges {
-      node {
-        id
-        amount
-        currency
-        date
-        summary
-      }
+    pageInfo {
+      hasNextPage
+      endCursor
     }
   }
 }
     `;
 
 /**
- * __useGetAmountSnapshotsQuery__
+ * __useGetSnapshotPageQuery__
  *
- * To run a query within a React component, call `useGetAmountSnapshotsQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetAmountSnapshotsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useGetSnapshotPageQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetSnapshotPageQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useGetAmountSnapshotsQuery({
+ * const { data, loading, error } = useGetSnapshotPageQuery({
  *   variables: {
+ *      currency: // value for 'currency'
  *      startDate: // value for 'startDate'
+ *      after: // value for 'after'
  *   },
  * });
  */
-export function useGetAmountSnapshotsQuery(baseOptions?: Apollo.QueryHookOptions<GetAmountSnapshotsQuery, GetAmountSnapshotsQueryVariables>) {
+export function useGetSnapshotPageQuery(baseOptions: Apollo.QueryHookOptions<GetSnapshotPageQuery, GetSnapshotPageQueryVariables> & ({ variables: GetSnapshotPageQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetAmountSnapshotsQuery, GetAmountSnapshotsQueryVariables>(GetAmountSnapshotsDocument, options);
+        return Apollo.useQuery<GetSnapshotPageQuery, GetSnapshotPageQueryVariables>(GetSnapshotPageDocument, options);
       }
-export function useGetAmountSnapshotsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetAmountSnapshotsQuery, GetAmountSnapshotsQueryVariables>) {
+export function useGetSnapshotPageLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetSnapshotPageQuery, GetSnapshotPageQueryVariables>) {
           const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetAmountSnapshotsQuery, GetAmountSnapshotsQueryVariables>(GetAmountSnapshotsDocument, options);
+          return Apollo.useLazyQuery<GetSnapshotPageQuery, GetSnapshotPageQueryVariables>(GetSnapshotPageDocument, options);
         }
 // @ts-ignore
-export function useGetAmountSnapshotsSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<GetAmountSnapshotsQuery, GetAmountSnapshotsQueryVariables>): Apollo.UseSuspenseQueryResult<GetAmountSnapshotsQuery, GetAmountSnapshotsQueryVariables>;
-export function useGetAmountSnapshotsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetAmountSnapshotsQuery, GetAmountSnapshotsQueryVariables>): Apollo.UseSuspenseQueryResult<GetAmountSnapshotsQuery | undefined, GetAmountSnapshotsQueryVariables>;
-export function useGetAmountSnapshotsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetAmountSnapshotsQuery, GetAmountSnapshotsQueryVariables>) {
+export function useGetSnapshotPageSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<GetSnapshotPageQuery, GetSnapshotPageQueryVariables>): Apollo.UseSuspenseQueryResult<GetSnapshotPageQuery, GetSnapshotPageQueryVariables>;
+export function useGetSnapshotPageSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetSnapshotPageQuery, GetSnapshotPageQueryVariables>): Apollo.UseSuspenseQueryResult<GetSnapshotPageQuery | undefined, GetSnapshotPageQueryVariables>;
+export function useGetSnapshotPageSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetSnapshotPageQuery, GetSnapshotPageQueryVariables>) {
           const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
-          return Apollo.useSuspenseQuery<GetAmountSnapshotsQuery, GetAmountSnapshotsQueryVariables>(GetAmountSnapshotsDocument, options);
+          return Apollo.useSuspenseQuery<GetSnapshotPageQuery, GetSnapshotPageQueryVariables>(GetSnapshotPageDocument, options);
         }
-export type GetAmountSnapshotsQueryHookResult = ReturnType<typeof useGetAmountSnapshotsQuery>;
-export type GetAmountSnapshotsLazyQueryHookResult = ReturnType<typeof useGetAmountSnapshotsLazyQuery>;
-export type GetAmountSnapshotsSuspenseQueryHookResult = ReturnType<typeof useGetAmountSnapshotsSuspenseQuery>;
-export type GetAmountSnapshotsQueryResult = Apollo.QueryResult<GetAmountSnapshotsQuery, GetAmountSnapshotsQueryVariables>;
+export type GetSnapshotPageQueryHookResult = ReturnType<typeof useGetSnapshotPageQuery>;
+export type GetSnapshotPageLazyQueryHookResult = ReturnType<typeof useGetSnapshotPageLazyQuery>;
+export type GetSnapshotPageSuspenseQueryHookResult = ReturnType<typeof useGetSnapshotPageSuspenseQuery>;
+export type GetSnapshotPageQueryResult = Apollo.QueryResult<GetSnapshotPageQuery, GetSnapshotPageQueryVariables>;
 export const GetStockTransactionDocument = gql`
     query GetStockTransaction($id: ID!) {
   stockTransactionRelay(
@@ -3084,8 +3090,8 @@ export type GetStockListLazyQueryHookResult = ReturnType<typeof useGetStockListL
 export type GetStockListSuspenseQueryHookResult = ReturnType<typeof useGetStockListSuspenseQuery>;
 export type GetStockListQueryResult = Apollo.QueryResult<GetStockListQuery, GetStockListQueryVariables>;
 export const GetAllStocksDocument = gql`
-    query GetAllStocks {
-  stockRelay(first: 500) {
+    query GetAllStocks($after: String) {
+  stockRelay(first: 100, after: $after) {
     edges {
       node {
         id
@@ -3093,6 +3099,10 @@ export const GetAllStocksDocument = gql`
         name
         currency
       }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
     }
   }
 }
@@ -3110,6 +3120,7 @@ export const GetAllStocksDocument = gql`
  * @example
  * const { data, loading, error } = useGetAllStocksQuery({
  *   variables: {
+ *      after: // value for 'after'
  *   },
  * });
  */
@@ -3427,11 +3438,11 @@ export type CreateStockTransactionMutationHookResult = ReturnType<typeof useCrea
 export type CreateStockTransactionMutationResult = Apollo.MutationResult<CreateStockTransactionMutation>;
 export type CreateStockTransactionMutationOptions = Apollo.BaseMutationOptions<CreateStockTransactionMutation, CreateStockTransactionMutationVariables>;
 export const GetAllTransactionsDocument = gql`
-    query GetAllTransactions($after: String, $first: Int, $accountId: ID, $dateGte: Date, $dateLte: Date) {
+    query GetAllTransactions($after: String, $first: Int, $accountId: ID, $dateGte: Date, $dateLte: Date, $type: TransactionCategory) {
   transactionRelay(
     first: $first
     after: $after
-    filters: {account: {bank: {}, id: {exact: $accountId}}, date: {gte: $dateGte, lte: $dateLte}}
+    filters: {account: {bank: {}, id: {exact: $accountId}}, date: {gte: $dateGte, lte: $dateLte}, type: {exact: $type}}
     order: {date: DESC, amount: ASC}
   ) {
     edges {
@@ -3490,6 +3501,7 @@ export const GetAllTransactionsDocument = gql`
  *      accountId: // value for 'accountId'
  *      dateGte: // value for 'dateGte'
  *      dateLte: // value for 'dateLte'
+ *      type: // value for 'type'
  *   },
  * });
  */
@@ -4171,11 +4183,12 @@ export type GetAccountMonthCountLazyQueryHookResult = ReturnType<typeof useGetAc
 export type GetAccountMonthCountSuspenseQueryHookResult = ReturnType<typeof useGetAccountMonthCountSuspenseQuery>;
 export type GetAccountMonthCountQueryResult = Apollo.QueryResult<GetAccountMonthCountQuery, GetAccountMonthCountQueryVariables>;
 export const UpdateTransactionDocument = gql`
-    mutation UpdateTransaction($id: ID!, $type: TransactionCategory, $retailerId: ID, $note: String, $isInternal: Boolean) {
+    mutation UpdateTransaction($id: ID!, $date: Date, $type: TransactionCategory, $retailerId: ID, $note: String, $isInternal: Boolean) {
   updateTransaction(
-    data: {id: $id, type: $type, retailer: {set: $retailerId}, note: $note, isInternal: $isInternal}
+    data: {id: $id, date: $date, type: $type, retailer: {set: $retailerId}, note: $note, isInternal: $isInternal}
   ) {
     id
+    date
     type
     retailer {
       id
@@ -4203,6 +4216,7 @@ export type UpdateTransactionMutationFn = Apollo.MutationFunction<UpdateTransact
  * const [updateTransactionMutation, { data, loading, error }] = useUpdateTransactionMutation({
  *   variables: {
  *      id: // value for 'id'
+ *      date: // value for 'date'
  *      type: // value for 'type'
  *      retailerId: // value for 'retailerId'
  *      note: // value for 'note'

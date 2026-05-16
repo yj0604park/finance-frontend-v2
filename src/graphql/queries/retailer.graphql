@@ -24,14 +24,18 @@ query GetRetailerType {
   }
 }
 
-query GetAllRetailers {
-  retailerRelay(first: 1000) {
+query GetAllRetailers($after: String) {
+  retailerRelay(first: 100, after: $after) {
     edges {
       node {
         id
         name
         category
       }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
     }
   }
 }

@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
 import { useApolloClient } from "@apollo/client";
+import { useEffect, useState } from "react";
 import {
   GetAllTransactionsDocument,
   type GetAllTransactionsQuery,
   type GetAllTransactionsQueryVariables,
+  type TransactionCategory,
 } from "@/graphql/generated/graphql";
 
 type TransactionEdge = GetAllTransactionsQuery["transactionRelay"]["edges"][number];
@@ -12,6 +13,7 @@ interface UseAllTransactionsOptions {
   accountId?: string | null;
   dateGte?: string | null;
   dateLte?: string | null;
+  type?: TransactionCategory | null;
   skip?: boolean;
 }
 
@@ -28,6 +30,7 @@ export function useAllTransactions({
   accountId,
   dateGte,
   dateLte,
+  type,
   skip = false,
 }: UseAllTransactionsOptions): UseAllTransactionsResult {
   const client = useApolloClient();
@@ -35,9 +38,6 @@ export function useAllTransactions({
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-
-  // Stable key to detect filter changes
-  const key = `${accountId ?? ""}|${dateGte ?? ""}|${dateLte ?? ""}`;
 
   useEffect(() => {
     if (skip) return;
@@ -64,6 +64,7 @@ export function useAllTransactions({
               accountId: accountId ?? null,
               dateGte: dateGte ?? null,
               dateLte: dateLte ?? null,
+              type: type ?? null,
             },
             fetchPolicy: "cache-first",
           });
@@ -92,9 +93,10 @@ export function useAllTransactions({
     }
 
     fetchAll();
-    return () => { cancelled = true; };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key, skip, client]);
+    return () => {
+      cancelled = true;
+    };
+  }, [accountId, client, dateGte, dateLte, skip, type]);
 
   return { edges, totalCount, loading, error };
 }

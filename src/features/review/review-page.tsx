@@ -10,6 +10,7 @@ import { DateRangeFilter } from "@/components/shared/date-range-filter";
 import { TransactionTable } from "@/components/shared/transaction-table";
 import { PaginationControls } from "@/components/shared/pagination-controls";
 import { toggleReviewed } from "@/lib/review";
+import { useCursorPagination } from "@/hooks/use-cursor-pagination";
 
 const PAGE_SIZE = 20;
 
@@ -18,15 +19,14 @@ export function ReviewPage() {
 
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
-  const [cursor, setCursor] = useState<string>("");
-  const [cursorStack, setCursorStack] = useState<string[]>([]);
+  const pagination = useCursorPagination();
   const [toggling, setToggling] = useState<Set<string>>(new Set());
   const [localReviewed, setLocalReviewed] = useState<Map<string, boolean>>(new Map());
 
   const { data, loading, error, refetch } = useGetUnreviewedTransactionsQuery({
     variables: {
       first: PAGE_SIZE,
-      after: cursor,
+      after: pagination.cursor,
       dateGte: startDate || null,
       dateLte: endDate || null,
     },
@@ -61,18 +61,12 @@ export function ReviewPage() {
   }, [transactions, handleToggle, refetch]);
 
   function handleNext() {
-    if (pageInfo?.endCursor) {
-      setCursorStack((prev) => [...prev, cursor]);
-      setCursor(pageInfo.endCursor ?? "");
-      setLocalReviewed(new Map());
-    }
+    pagination.goNext(pageInfo?.endCursor);
+    setLocalReviewed(new Map());
   }
 
   function handlePrev() {
-    const stack = [...cursorStack];
-    const prev = stack.pop() ?? "";
-    setCursorStack(stack);
-    setCursor(prev);
+    pagination.goPrev();
     setLocalReviewed(new Map());
   }
 
@@ -96,7 +90,11 @@ export function ReviewPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => { setCursor(""); setCursorStack([]); setLocalReviewed(new Map()); void refetch(); }}
+            onClick={() => {
+              pagination.reset();
+              setLocalReviewed(new Map());
+              void refetch();
+            }}
             className="gap-2"
           >
             <RefreshCw className="h-3.5 w-3.5" />
@@ -109,8 +107,14 @@ export function ReviewPage() {
       <DateRangeFilter
         startDate={startDate}
         endDate={endDate}
-        onStartChange={(v) => { setStartDate(v); setCursor(""); setCursorStack([]); }}
-        onEndChange={(v) => { setEndDate(v); setCursor(""); setCursorStack([]); }}
+        onStartChange={(v) => {
+          setStartDate(v);
+          pagination.reset();
+        }}
+        onEndChange={(v) => {
+          setEndDate(v);
+          pagination.reset();
+        }}
       >
         {transactions.length > 0 && (
           <Button
@@ -160,10 +164,10 @@ export function ReviewPage() {
 
       {/* Pagination */}
       <PaginationControls
-        currentPage={cursorStack.length + 1}
+        currentPage={pagination.currentPage}
         totalCount={totalCount}
         pageSize={PAGE_SIZE}
-        canPrev={cursorStack.length > 0}
+        canPrev={pagination.canPrev}
         canNext={!!pageInfo?.hasNextPage}
         onPrev={handlePrev}
         onNext={handleNext}

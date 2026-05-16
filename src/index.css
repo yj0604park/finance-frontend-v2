@@ -142,8 +142,5 @@
   button, a, [role="button"] {
     -webkit-tap-highlight-color: transparent;
   }
-  /* Minimum touch target size (Apple HIG: 44pt) */
-  button, [role="button"] {
-    min-height: 44px;
-  }
+
 }

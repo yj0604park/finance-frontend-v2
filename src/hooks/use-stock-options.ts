@@ -1,6 +1,6 @@
-import { useGetAllStocksQuery } from "@/graphql/generated/graphql";
 import { useApolloClient } from "@apollo/client";
-import { GetAllStocksDocument } from "@/graphql/generated/graphql";
+import { useEffect } from "react";
+import { GetAllStocksDocument, useGetAllStocksQuery } from "@/graphql/generated/graphql";
 
 export type StockOption = {
   id: string;
@@ -11,9 +11,25 @@ export type StockOption = {
 
 export function useStockOptions() {
   const client = useApolloClient();
-  const { data, loading } = useGetAllStocksQuery({
+  const { data, loading, fetchMore } = useGetAllStocksQuery({
+    variables: { after: "" },
     fetchPolicy: "cache-first",
   });
+
+  useEffect(() => {
+    const pageInfo = data?.stockRelay.pageInfo;
+    if (!pageInfo?.hasNextPage || !pageInfo.endCursor) return;
+
+    void fetchMore({
+      variables: { after: pageInfo.endCursor },
+      updateQuery: (previous, { fetchMoreResult }) => ({
+        stockRelay: {
+          ...fetchMoreResult.stockRelay,
+          edges: [...previous.stockRelay.edges, ...fetchMoreResult.stockRelay.edges],
+        },
+      }),
+    });
+  }, [data?.stockRelay.pageInfo, fetchMore]);
 
   const stocks: StockOption[] = (data?.stockRelay?.edges ?? []).map((e) => ({
     id: e.node.id,
@@ -23,10 +39,14 @@ export function useStockOptions() {
   }));
 
   function addStock(stock: StockOption) {
-    const existing = client.readQuery({ query: GetAllStocksDocument });
+    const existing = client.readQuery({
+      query: GetAllStocksDocument,
+      variables: { after: "" },
+    });
     if (!existing) return;
     client.writeQuery({
       query: GetAllStocksDocument,
+      variables: { after: "" },
       data: {
         stockRelay: {
           ...existing.stockRelay,

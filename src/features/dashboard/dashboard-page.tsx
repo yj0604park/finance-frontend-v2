@@ -1,17 +1,27 @@
-import { useGetBankListQuery, useGetAmountSnapshotsQuery, useGetLastTransactionDateQuery } from "@/graphql/generated/graphql";
+import { useState } from "react";
+import { useGetBankListQuery, useGetLastTransactionDateQuery, CurrencyType } from "@/graphql/generated/graphql";
 import { formatCurrency, formatDate, getTotalBalance } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { BalanceChart } from "./balance-chart";
 import { BankCard } from "./bank-card";
-import { Landmark, CalendarDays, Building2 } from "lucide-react";
+import { Landmark, CalendarDays, Building2, RefreshCw } from "lucide-react";
 
 export function DashboardPage() {
   const { data, loading, error } = useGetBankListQuery();
-  const { data: snapshotData, loading: snapshotLoading } = useGetAmountSnapshotsQuery({
-    variables: { startDate: null },
-  });
   const { data: lastTxData } = useGetLastTransactionDateQuery();
+  const [updatingSnapshot, setUpdatingSnapshot] = useState(false);
+
+  async function handleUpdateSnapshot() {
+    setUpdatingSnapshot(true);
+    try {
+      await fetch("/money/update_snapshot", { credentials: "include" });
+      window.location.reload();
+    } finally {
+      setUpdatingSnapshot(false);
+    }
+  }
 
   if (error) {
     return (
@@ -30,12 +40,24 @@ export function DashboardPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Dashboard</h1>
-        {lastTxDate && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <CalendarDays className="h-4 w-4" />
-            마지막 거래: {formatDate(lastTxDate)}
-          </div>
-        )}
+        <div className="flex items-center gap-3">
+          {lastTxDate && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <CalendarDays className="h-4 w-4" />
+              마지막 거래: {formatDate(lastTxDate)}
+            </div>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleUpdateSnapshot}
+            disabled={updatingSnapshot}
+            className="gap-1.5"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${updatingSnapshot ? "animate-spin" : ""}`} />
+            스냅샷 업데이트
+          </Button>
+        </div>
       </div>
 
       {/* Balance Summary */}
@@ -58,18 +80,8 @@ export function DashboardPage() {
 
       {/* Balance Charts */}
       <div className="grid gap-4 md:grid-cols-2">
-        <BalanceChart
-          title="KRW 잔액 추이"
-          data={snapshotData?.krwSnapshot?.edges ?? []}
-          loading={snapshotLoading}
-          currency="KRW"
-        />
-        <BalanceChart
-          title="USD 잔액 추이"
-          data={snapshotData?.usdSnapshot?.edges ?? []}
-          loading={snapshotLoading}
-          currency="USD"
-        />
+        <BalanceChart title="KRW 잔액 추이" currency={CurrencyType.Krw} />
+        <BalanceChart title="USD 잔액 추이" currency={CurrencyType.Usd} />
       </div>
 
       {/* Bank List */}

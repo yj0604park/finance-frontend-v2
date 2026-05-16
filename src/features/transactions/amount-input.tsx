@@ -8,7 +8,8 @@ interface AmountInputProps {
 }
 
 function toggleSign(v: string): string {
-  if (!v || v === "-" || v === "0") return v;
+  if (v === "-") return "";
+  if (!v || v === "0") return "-";
   return v.startsWith("-") ? v.slice(1) : `-${v}`;
 }
 

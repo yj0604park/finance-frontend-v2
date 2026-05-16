@@ -1,10 +1,11 @@
-query GetAllTransactions($after: String, $first: Int, $accountId: ID, $dateGte: Date, $dateLte: Date) {
+query GetAllTransactions($after: String, $first: Int, $accountId: ID, $dateGte: Date, $dateLte: Date, $type: TransactionCategory) {
   transactionRelay(
     first: $first
     after: $after
     filters: {
       account: { bank: {}, id: { exact: $accountId } }
       date: { gte: $dateGte, lte: $dateLte }
+      type: { exact: $type }
     }
     order: { date: DESC, amount: ASC }
   ) {
@@ -310,6 +311,7 @@ query GetAccountMonthCount($accountId: ID, $dateGte: Date, $dateLte: Date) {
 
 mutation UpdateTransaction(
   $id: ID!
+  $date: Date
   $type: TransactionCategory
   $retailerId: ID
   $note: String
@@ -318,6 +320,7 @@ mutation UpdateTransaction(
   updateTransaction(
     data: {
       id: $id
+      date: $date
       type: $type
       retailer: { set: $retailerId }
       note: $note
@@ -325,6 +328,7 @@ mutation UpdateTransaction(
     }
   ) {
     id
+    date
     type
     retailer {
       id

@@ -1,3 +1,19 @@
+# Finance frontend
+
+## Local ports
+
+- Frontend dev server: `http://localhost:3000`
+- Backend API/proxy target: `http://localhost:58000`
+- Vite uses `strictPort: true`, so startup fails instead of silently moving to another port if `3000` is already in use.
+
+```bash
+npm run dev
+```
+
+Keep `5173` available for other Vite apps; finance should use `3000`.
+
+---
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.

@@ -35,7 +35,10 @@ export function PaginationControls({
   let windowStart = Math.max(1, currentPage - Math.floor(windowSize / 2));
   const windowEnd = Math.min(totalPages, windowStart + windowSize - 1);
   windowStart = Math.max(1, windowEnd - windowSize + 1);
-  const pageNumbers = Array.from({ length: windowEnd - windowStart + 1 }, (_, i) => windowStart + i);
+  const pageNumbers = Array.from(
+    { length: windowEnd - windowStart + 1 },
+    (_, i) => windowStart + i,
+  );
 
   return (
     <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -44,21 +47,34 @@ export function PaginationControls({
         {itemLabel}
       </span>
       <div className="flex items-center gap-1">
-        <Button variant="outline" size="sm" onClick={onPrev} disabled={!canPrev}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onPrev}
+          disabled={!canPrev}
+          aria-label="이전 페이지"
+        >
           <ChevronLeft className="h-4 w-4" />
         </Button>
-        {onGoToPage && pageNumbers.map((p) => (
-          <Button
-            key={p}
-            variant={p === currentPage ? "default" : "outline"}
-            size="sm"
-            className="w-8 px-0"
-            onClick={() => onGoToPage(p)}
-          >
-            {p}
-          </Button>
-        ))}
-        <Button variant="outline" size="sm" onClick={onNext} disabled={!canNext}>
+        {onGoToPage &&
+          pageNumbers.map((p) => (
+            <Button
+              key={p}
+              variant={p === currentPage ? "default" : "outline"}
+              size="sm"
+              className="w-8 px-0"
+              onClick={() => onGoToPage(p)}
+            >
+              {p}
+            </Button>
+          ))}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onNext}
+          disabled={!canNext}
+          aria-label="다음 페이지"
+        >
           <ChevronRight className="h-4 w-4" />
         </Button>
       </div>

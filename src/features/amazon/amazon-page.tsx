@@ -1,13 +1,9 @@
+import { format, parseISO, subMonths } from "date-fns";
+import { Link2, Package, Plus, RotateCcw } from "lucide-react";
 import { useState } from "react";
-import { format, parseISO } from "date-fns";
-import {
-  useGetAmazonOrdersQuery,
-  useCreateAmazonOrderMutation,
-  useGetAllTransactionsQuery,
-} from "@/graphql/generated/graphql";
-import { formatCurrency, formatDate } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { PaginationControls } from "@/components/shared/pagination-controls";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
@@ -18,6 +14,13 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -27,9 +30,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Package, RotateCcw, Link2 } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { subMonths } from "date-fns";
+import { useCreateAmazonOrderMutation, useGetAmazonOrdersQuery } from "@/graphql/generated/graphql";
+import { useAllTransactions } from "@/hook/useAllTransactions";
+import { useCursorPagination } from "@/hooks/use-cursor-pagination";
+import { formatCurrency, formatDate } from "@/lib/format";
 
 const PAGE_SIZE = 30;
 
@@ -43,18 +47,11 @@ function CreateAmazonOrderDialog({ onCreated }: { onCreated: () => void }) {
   const threeMonthsAgo = format(subMonths(new Date(), 3), "yyyy-MM-dd");
   const today = format(new Date(), "yyyy-MM-dd");
 
-  const { data: txData } = useGetAllTransactionsQuery({
-    variables: {
-      first: 200,
-      after: "",
-      accountId: null,
-      dateGte: threeMonthsAgo,
-      dateLte: today,
-    },
+  const { edges: amazonTxs } = useAllTransactions({
+    dateGte: threeMonthsAgo,
+    dateLte: today,
     skip: !open,
   });
-
-  const amazonTxs = txData?.transactionRelay?.edges ?? [];
 
   const [createOrder, { loading }] = useCreateAmazonOrderMutation({
     onCompleted: () => {
@@ -156,30 +153,15 @@ function CreateAmazonOrderDialog({ onCreated }: { onCreated: () => void }) {
 }
 
 export function AmazonPage() {
-  const [cursor, setCursor] = useState<string>("");
-  const [cursorStack, setCursorStack] = useState<string[]>([]);
+  const pagination = useCursorPagination();
 
   const { data, loading, error, refetch } = useGetAmazonOrdersQuery({
-    variables: { first: PAGE_SIZE, after: cursor },
+    variables: { first: PAGE_SIZE, after: pagination.cursor },
   });
 
   const orders = data?.amazonOrderRelay?.edges ?? [];
   const pageInfo = data?.amazonOrderRelay?.pageInfo;
   const totalCount = data?.amazonOrderRelay?.totalCount ?? 0;
-
-  function handleNext() {
-    if (pageInfo?.endCursor) {
-      setCursorStack((prev) => [...prev, cursor]);
-      setCursor(pageInfo.endCursor ?? "");
-    }
-  }
-
-  function handlePrev() {
-    const stack = [...cursorStack];
-    const prev = stack.pop() ?? "";
-    setCursorStack(stack);
-    setCursor(prev);
-  }
 
   // Note: counts are page-scoped (current 30 items) — server doesn't provide filtered totals
   const linkedCount = orders.filter((e) => e.node.transaction !== null).length;
@@ -198,9 +180,7 @@ export function AmazonPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Amazon Orders</h1>
-          <p className="text-muted-foreground mt-1 text-sm">
-            Amazon 주문 내역 관리
-          </p>
+          <p className="text-muted-foreground mt-1 text-sm">Amazon 주문 내역 관리</p>
         </div>
         <CreateAmazonOrderDialog onCreated={() => refetch()} />
       </div>
@@ -274,10 +254,7 @@ export function AmazonPage() {
               <TableBody>
                 {orders.length === 0 ? (
                   <TableRow>
-                    <TableCell
-                      colSpan={5}
-                      className="text-center text-muted-foreground py-12"
-                    >
+                    <TableCell colSpan={5} className="text-center text-muted-foreground py-12">
                       <Package className="h-8 w-8 mx-auto mb-2 opacity-40" />
                       주문 내역이 없습니다
                     </TableCell>
@@ -290,9 +267,7 @@ export function AmazonPage() {
                         <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
                           {formatDate(order.date)}
                         </TableCell>
-                        <TableCell className="text-sm font-medium max-w-xs">
-                          {order.item}
-                        </TableCell>
+                        <TableCell className="text-sm font-medium max-w-xs">{order.item}</TableCell>
                         <TableCell className="text-sm">
                           {order.transaction ? (
                             <span className="inline-flex items-center gap-1 text-indigo-600 dark:text-indigo-400">
@@ -341,29 +316,15 @@ export function AmazonPage() {
       </Card>
 
       {/* Pagination */}
-      <div className="flex items-center justify-between">
-        <span className="text-sm text-muted-foreground">
-          페이지 {cursorStack.length + 1} · {orders.length} / {totalCount}
-        </span>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handlePrev}
-            disabled={cursorStack.length === 0}
-          >
-            이전
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleNext}
-            disabled={!pageInfo?.hasNextPage}
-          >
-            다음
-          </Button>
-        </div>
-      </div>
+      <PaginationControls
+        currentPage={pagination.currentPage}
+        totalCount={totalCount}
+        pageSize={PAGE_SIZE}
+        canPrev={pagination.canPrev}
+        canNext={!!pageInfo?.hasNextPage}
+        onPrev={pagination.goPrev}
+        onNext={() => pagination.goNext(pageInfo?.endCursor)}
+      />
     </div>
   );
 }
