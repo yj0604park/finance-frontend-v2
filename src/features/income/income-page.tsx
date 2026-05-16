@@ -1,5 +1,6 @@
 import { Decimal } from "decimal.js";
 import { useNavigate } from "react-router-dom";
+import { ErrorAlert } from "@/components/shared/error-alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -24,7 +25,7 @@ interface YearSummary {
 }
 
 export function IncomePage() {
-  const { data: salaryData, loading: salaryLoading } = useGetSalaryListQuery();
+  const { data: salaryData, loading: salaryLoading, error: salaryError } = useGetSalaryListQuery();
 
   const loading = salaryLoading;
   const salaries = salaryData?.salaryRelay?.edges ?? [];
@@ -63,6 +64,10 @@ export function IncomePage() {
     grossPay: toNumber(edge.node.grossPay),
     netPay: toNumber(edge.node.netPay),
   }));
+
+  if (salaryError) {
+    return <ErrorAlert error={salaryError} prefix="Failed to load salary data" />;
+  }
 
   return (
     <div className="space-y-6">

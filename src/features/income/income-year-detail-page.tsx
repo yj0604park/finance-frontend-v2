@@ -2,6 +2,7 @@ import { Decimal } from "decimal.js";
 import { ArrowLeft, Pencil, Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { ErrorAlert } from "@/components/shared/error-alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,7 +37,7 @@ export function IncomeYearDetailPage() {
   const dateMin = `${year}-01-01`;
   const dateMax = `${year}-12-31`;
 
-  const { data, loading, refetch } = useGetSalaryFilteredQuery({
+  const { data, loading, error, refetch } = useGetSalaryFilteredQuery({
     variables: { dateMin, dateMax },
     skip: !year,
   });
@@ -69,6 +70,10 @@ export function IncomeYearDetailPage() {
     grossPay: toNumber(edge.node.grossPay),
     netPay: toNumber(edge.node.netPay),
   }));
+
+  if (error) {
+    return <ErrorAlert error={error} prefix="Failed to load salary details" />;
+  }
 
   return (
     <div className="space-y-6">
