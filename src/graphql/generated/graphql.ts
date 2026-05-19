@@ -286,6 +286,79 @@ export type BoolBaseFilterLookup = {
   isNull: InputMaybe<Scalars['Boolean']['input']>;
 };
 
+export type CreditCardBenefitInput = {
+  capAmount: InputMaybe<Scalars['Decimal']['input']>;
+  category: InputMaybe<Scalars['String']['input']>;
+  conditions: Scalars['String']['input'];
+  creditCard: OneToManyInput;
+  description: Scalars['String']['input'];
+  rate: InputMaybe<Scalars['Decimal']['input']>;
+  title: Scalars['String']['input'];
+};
+
+export type CreditCardBenefitNode = Node & {
+  __typename?: 'CreditCardBenefitNode';
+  capAmount: Maybe<Scalars['Decimal']['output']>;
+  category: Scalars['String']['output'];
+  conditions: Scalars['String']['output'];
+  description: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  rate: Maybe<Scalars['Decimal']['output']>;
+  title: Scalars['String']['output'];
+};
+
+export type CreditCardFilter = {
+  AND: InputMaybe<CreditCardFilter>;
+  DISTINCT: InputMaybe<Scalars['Boolean']['input']>;
+  NOT: InputMaybe<CreditCardFilter>;
+  OR: InputMaybe<CreditCardFilter>;
+  id: InputMaybe<IdBaseFilterLookup>;
+};
+
+export type CreditCardInput = {
+  account: OneToOneInput;
+  annualFee: InputMaybe<Scalars['Decimal']['input']>;
+  expiryDate: InputMaybe<Scalars['Date']['input']>;
+  issueDate: InputMaybe<Scalars['Date']['input']>;
+  notes: Scalars['String']['input'];
+};
+
+export type CreditCardNode = Node & {
+  __typename?: 'CreditCardNode';
+  account: AccountNode;
+  annualFee: Scalars['Decimal']['output'];
+  benefits: Array<CreditCardBenefitNode>;
+  expiryDate: Maybe<Scalars['Date']['output']>;
+  id: Scalars['ID']['output'];
+  issueDate: Maybe<Scalars['Date']['output']>;
+  notes: Scalars['String']['output'];
+};
+
+/** A connection to a list of items. */
+export type CreditCardNodeConnection = {
+  __typename?: 'CreditCardNodeConnection';
+  /** Contains the nodes in this connection */
+  edges: Array<CreditCardNodeEdge>;
+  /** Pagination data for this connection */
+  pageInfo: PageInfo;
+  /** Total quantity of existing nodes. */
+  totalCount: Maybe<Scalars['Int']['output']>;
+};
+
+/** An edge in a connection. */
+export type CreditCardNodeEdge = {
+  __typename?: 'CreditCardNodeEdge';
+  /** A cursor for use in pagination */
+  cursor: Scalars['String']['output'];
+  /** The item at the end of the edge */
+  node: CreditCardNode;
+};
+
+export type CreditCardOrder = {
+  annualFee: InputMaybe<Ordering>;
+  issueDate: InputMaybe<Ordering>;
+};
+
 export enum CurrencyType {
   Krw = 'KRW',
   Usd = 'USD'
@@ -529,6 +602,8 @@ export type Mutation = {
   __typename?: 'Mutation';
   createAccount: AccountNode;
   createAmazonOrder: AmazonOrderNode;
+  createCreditCard: CreditCardNode;
+  createCreditCardBenefit: CreditCardBenefitNode;
   createRetailer: RetailerNode;
   createSalary: SalaryNode;
   createStock: StockNode;
@@ -538,7 +613,6 @@ export type Mutation = {
   updateAccount: AccountNode;
   updateSalary: SalaryNode;
   updateStockTransaction: StockTransactionNode;
-  updateTransaction: TransactionNode;
 };
 
 
@@ -549,6 +623,16 @@ export type MutationCreateAccountArgs = {
 
 export type MutationCreateAmazonOrderArgs = {
   data: AmazonOrderInput;
+};
+
+
+export type MutationCreateCreditCardArgs = {
+  data: CreditCardInput;
+};
+
+
+export type MutationCreateCreditCardBenefitArgs = {
+  data: CreditCardBenefitInput;
 };
 
 
@@ -596,11 +680,6 @@ export type MutationUpdateStockTransactionArgs = {
   data: StockTransactionPartialInput;
 };
 
-
-export type MutationUpdateTransactionArgs = {
-  data: TransactionPartialInput;
-};
-
 /** An object with a Globally Unique ID */
 export type Node = {
   /** The Globally Unique ID of this object */
@@ -608,6 +687,10 @@ export type Node = {
 };
 
 export type OneToManyInput = {
+  set: InputMaybe<Scalars['ID']['input']>;
+};
+
+export type OneToOneInput = {
   set: InputMaybe<Scalars['ID']['input']>;
 };
 
@@ -639,6 +722,7 @@ export type Query = {
   amazonOrderRelay: AmazonOrderNodeConnection;
   amountSnapshotRelay: AmountSnapshotNodeConnection;
   bankRelay: BankNodeConnection;
+  creditCardRelay: CreditCardNodeConnection;
   exchangeRelay: ExchangeNodeConnection;
   retailerRelay: RetailerNodeConnection;
   salaryRelay: SalaryNodeConnection;
@@ -686,6 +770,16 @@ export type QueryBankRelayArgs = {
   filters: InputMaybe<BankFilter>;
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryCreditCardRelayArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  filters: InputMaybe<CreditCardFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  order: InputMaybe<CreditCardOrder>;
 };
 
 
@@ -1196,15 +1290,6 @@ export type TransactionOrder = {
   id: InputMaybe<Ordering>;
 };
 
-export type TransactionPartialInput = {
-  date: InputMaybe<Scalars['Date']['input']>;
-  id: Scalars['ID']['input'];
-  isInternal: InputMaybe<Scalars['Boolean']['input']>;
-  note: InputMaybe<Scalars['String']['input']>;
-  retailer: InputMaybe<OneToManyInput>;
-  type: InputMaybe<TransactionCategory>;
-};
-
 /** One possible value for a given Enum. Enum values are unique values, not a placeholder for a string or numeric value. However an Enum value is returned in a JSON response as a string. */
 export type __EnumValue = {
   __typename?: '__EnumValue';
@@ -1456,6 +1541,13 @@ export type GetBankSimpleListQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type GetBankSimpleListQuery = { __typename?: 'Query', bankRelay: { __typename?: 'BankNodeConnection', edges: Array<{ __typename?: 'BankNodeEdge', node: { __typename?: 'BankNode', id: string, name: string } }> } };
 
+export type CreditCardsQueryVariables = Exact<{
+  first?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type CreditCardsQuery = { __typename?: 'Query', creditCardRelay: { __typename?: 'CreditCardNodeConnection', edges: Array<{ __typename?: 'CreditCardNodeEdge', node: { __typename?: 'CreditCardNode', id: string, annualFee: string, issueDate: string | null, expiryDate: string | null, notes: string, account: { __typename?: 'AccountNode', id: string, name: string, amount: string, lastTransaction: string | null, isActive: boolean, bank: { __typename?: 'BankNode', id: string, name: string } }, benefits: Array<{ __typename?: 'CreditCardBenefitNode', id: string, category: string, title: string, description: string, rate: string | null, capAmount: string | null, conditions: string }> } }> } };
+
 export type GetExchangeListQueryVariables = Exact<{
   first: Scalars['Int']['input'];
   after: Scalars['String']['input'];
@@ -1689,18 +1781,6 @@ export type GetAccountMonthCountQueryVariables = Exact<{
 
 
 export type GetAccountMonthCountQuery = { __typename?: 'Query', transactionRelay: { __typename?: 'TransactionNodeConnection', totalCount: number | null } };
-
-export type UpdateTransactionMutationVariables = Exact<{
-  id: Scalars['ID']['input'];
-  date: InputMaybe<Scalars['Date']['input']>;
-  type: InputMaybe<TransactionCategory>;
-  retailerId: InputMaybe<Scalars['ID']['input']>;
-  note: InputMaybe<Scalars['String']['input']>;
-  isInternal: InputMaybe<Scalars['Boolean']['input']>;
-}>;
-
-
-export type UpdateTransactionMutation = { __typename?: 'Mutation', updateTransaction: { __typename?: 'TransactionNode', id: string, date: string, type: TransactionCategory, note: string | null, isInternal: boolean, reviewed: boolean, retailer: { __typename?: 'RetailerNode', id: string, name: string } | null } };
 
 
 export const CreateRetailerDocument = gql`
@@ -2461,6 +2541,77 @@ export type GetBankSimpleListQueryHookResult = ReturnType<typeof useGetBankSimpl
 export type GetBankSimpleListLazyQueryHookResult = ReturnType<typeof useGetBankSimpleListLazyQuery>;
 export type GetBankSimpleListSuspenseQueryHookResult = ReturnType<typeof useGetBankSimpleListSuspenseQuery>;
 export type GetBankSimpleListQueryResult = Apollo.QueryResult<GetBankSimpleListQuery, GetBankSimpleListQueryVariables>;
+export const CreditCardsDocument = gql`
+    query CreditCards($first: Int = 100) {
+  creditCardRelay(first: $first) {
+    edges {
+      node {
+        id
+        account {
+          id
+          name
+          bank {
+            id
+            name
+          }
+          amount
+          lastTransaction
+          isActive
+        }
+        annualFee
+        issueDate
+        expiryDate
+        notes
+        benefits {
+          id
+          category
+          title
+          description
+          rate
+          capAmount
+          conditions
+        }
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useCreditCardsQuery__
+ *
+ * To run a query within a React component, call `useCreditCardsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useCreditCardsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useCreditCardsQuery({
+ *   variables: {
+ *      first: // value for 'first'
+ *   },
+ * });
+ */
+export function useCreditCardsQuery(baseOptions?: Apollo.QueryHookOptions<CreditCardsQuery, CreditCardsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<CreditCardsQuery, CreditCardsQueryVariables>(CreditCardsDocument, options);
+      }
+export function useCreditCardsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<CreditCardsQuery, CreditCardsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<CreditCardsQuery, CreditCardsQueryVariables>(CreditCardsDocument, options);
+        }
+// @ts-ignore
+export function useCreditCardsSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<CreditCardsQuery, CreditCardsQueryVariables>): Apollo.UseSuspenseQueryResult<CreditCardsQuery, CreditCardsQueryVariables>;
+export function useCreditCardsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<CreditCardsQuery, CreditCardsQueryVariables>): Apollo.UseSuspenseQueryResult<CreditCardsQuery | undefined, CreditCardsQueryVariables>;
+export function useCreditCardsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<CreditCardsQuery, CreditCardsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<CreditCardsQuery, CreditCardsQueryVariables>(CreditCardsDocument, options);
+        }
+export type CreditCardsQueryHookResult = ReturnType<typeof useCreditCardsQuery>;
+export type CreditCardsLazyQueryHookResult = ReturnType<typeof useCreditCardsLazyQuery>;
+export type CreditCardsSuspenseQueryHookResult = ReturnType<typeof useCreditCardsSuspenseQuery>;
+export type CreditCardsQueryResult = Apollo.QueryResult<CreditCardsQuery, CreditCardsQueryVariables>;
 export const GetExchangeListDocument = gql`
     query GetExchangeList($first: Int!, $after: String!) {
   exchangeRelay(order: {date: DESC}, first: $first, after: $after) {
@@ -4179,52 +4330,3 @@ export type GetAccountMonthCountQueryHookResult = ReturnType<typeof useGetAccoun
 export type GetAccountMonthCountLazyQueryHookResult = ReturnType<typeof useGetAccountMonthCountLazyQuery>;
 export type GetAccountMonthCountSuspenseQueryHookResult = ReturnType<typeof useGetAccountMonthCountSuspenseQuery>;
 export type GetAccountMonthCountQueryResult = Apollo.QueryResult<GetAccountMonthCountQuery, GetAccountMonthCountQueryVariables>;
-export const UpdateTransactionDocument = gql`
-    mutation UpdateTransaction($id: ID!, $date: Date, $type: TransactionCategory, $retailerId: ID, $note: String, $isInternal: Boolean) {
-  updateTransaction(
-    data: {id: $id, date: $date, type: $type, retailer: {set: $retailerId}, note: $note, isInternal: $isInternal}
-  ) {
-    id
-    date
-    type
-    retailer {
-      id
-      name
-    }
-    note
-    isInternal
-    reviewed
-  }
-}
-    `;
-export type UpdateTransactionMutationFn = Apollo.MutationFunction<UpdateTransactionMutation, UpdateTransactionMutationVariables>;
-
-/**
- * __useUpdateTransactionMutation__
- *
- * To run a mutation, you first call `useUpdateTransactionMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useUpdateTransactionMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [updateTransactionMutation, { data, loading, error }] = useUpdateTransactionMutation({
- *   variables: {
- *      id: // value for 'id'
- *      date: // value for 'date'
- *      type: // value for 'type'
- *      retailerId: // value for 'retailerId'
- *      note: // value for 'note'
- *      isInternal: // value for 'isInternal'
- *   },
- * });
- */
-export function useUpdateTransactionMutation(baseOptions?: Apollo.MutationHookOptions<UpdateTransactionMutation, UpdateTransactionMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UpdateTransactionMutation, UpdateTransactionMutationVariables>(UpdateTransactionDocument, options);
-      }
-export type UpdateTransactionMutationHookResult = ReturnType<typeof useUpdateTransactionMutation>;
-export type UpdateTransactionMutationResult = Apollo.MutationResult<UpdateTransactionMutation>;
-export type UpdateTransactionMutationOptions = Apollo.BaseMutationOptions<UpdateTransactionMutation, UpdateTransactionMutationVariables>;

@@ -326,33 +326,33 @@ query GetAccountMonthCount($accountId: ID, $dateGte: Date, $dateLte: Date) {
   }
 }
 
-mutation UpdateTransaction(
-  $id: ID!
-  $date: Date
-  $type: TransactionCategory
-  $retailerId: ID
-  $note: String
-  $isInternal: Boolean
-) {
-  updateTransaction(
-    data: {
-      id: $id
-      date: $date
-      type: $type
-      retailer: { set: $retailerId }
-      note: $note
-      isInternal: $isInternal
-    }
-  ) {
-    id
-    date
-    type
-    retailer {
-      id
-      name
-    }
-    note
-    isInternal
-    reviewed
-  }
-}
+# mutation UpdateTransaction(
+#   $id: ID!
+#   $date: Date
+#   $type: TransactionCategory
+#   $retailerId: ID
+#   $note: String
+#   $isInternal: Boolean
+# ) {
+#   updateTransaction(
+#     data: {
+#       id: $id
+#       date: $date
+#       type: $type
+#       retailer: { set: $retailerId }
+#       note: $note
+#       isInternal: $isInternal
+#     }
+#   ) {
+#     id
+#     date
+#     type
+#     retailer {
+#       id
+#       name
+#     }
+#     note
+#     isInternal
+#     reviewed
+#   }
+# }

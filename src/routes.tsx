@@ -72,6 +72,11 @@ const ExchangesPage = lazy(() =>
 const AuditPage = lazy(() =>
   import("@/features/audit/audit-page").then((m) => ({ default: m.AuditPage })),
 );
+const CreditCardsPage = lazy(() =>
+  import("@/features/credit-cards/credit-cards-page").then((m) => ({
+    default: m.CreditCardsPage,
+  })),
+);
 
 function SuspenseWrapper({ children }: { children: React.ReactNode }) {
   return (
@@ -238,6 +243,14 @@ export const routes: RouteObject[] = [
         element: (
           <SuspenseWrapper>
             <AuditPage />
+          </SuspenseWrapper>
+        ),
+      },
+      {
+        path: "credit-cards",
+        element: (
+          <SuspenseWrapper>
+            <CreditCardsPage />
           </SuspenseWrapper>
         ),
       },

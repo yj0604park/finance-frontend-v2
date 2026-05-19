@@ -1,0 +1,33 @@
+query CreditCards($first: Int = 100) {
+  creditCardRelay(first: $first) {
+    edges {
+      node {
+        id
+        account {
+          id
+          name
+          bank {
+            id
+            name
+          }
+          amount
+          lastTransaction
+          isActive
+        }
+        annualFee
+        issueDate
+        expiryDate
+        notes
+        benefits {
+          id
+          category
+          title
+          description
+          rate
+          capAmount
+          conditions
+        }
+      }
+    }
+  }
+}

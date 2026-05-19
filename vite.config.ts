@@ -20,20 +20,20 @@ export default defineConfig({
     port: 3000,
     strictPort: true,
     host: true,
-    allowedHosts: ["minitwo", "minitwo.tail591527.ts.net"],
+    allowedHosts: ["minitwo", "minitwo.tail591527.ts.net", "finance.paryoja.com"],
     proxy: {
       "/money": {
-        target: "http://localhost:58000",
+        target: "http://django:8000",
         changeOrigin: true,
         cookieDomainRewrite: "",
       },
       "/auth-token": {
-        target: "http://localhost:58000",
+        target: "http://django:8000",
         changeOrigin: true,
         cookieDomainRewrite: "",
       },
       "/accounts": {
-        target: "http://localhost:58000",
+        target: "http://django:8000",
         changeOrigin: true,
         cookieDomainRewrite: "",
         bypass(req) {
@@ -41,7 +41,7 @@ export default defineConfig({
         },
       },
       "/graphql": {
-        target: "http://localhost:58000",
+        target: "http://django:8000",
         changeOrigin: true,
         cookieDomainRewrite: "",
       },

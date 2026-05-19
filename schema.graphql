@@ -288,6 +288,78 @@ input BoolBaseFilterLookup {
   inList: [Boolean!]
 }
 
+input CreditCardBenefitInput {
+  creditCard: OneToManyInput!
+  category: String
+  title: String!
+  description: String! = ""
+  rate: Decimal
+  capAmount: Decimal
+  conditions: String! = ""
+}
+
+type CreditCardBenefitNode implements Node {
+  id: ID!
+  category: String!
+  title: String!
+  description: String!
+  rate: Decimal
+  capAmount: Decimal
+  conditions: String!
+}
+
+input CreditCardFilter {
+  id: IDBaseFilterLookup
+  AND: CreditCardFilter
+  OR: CreditCardFilter
+  NOT: CreditCardFilter
+  DISTINCT: Boolean
+}
+
+input CreditCardInput {
+  account: OneToOneInput!
+  annualFee: Decimal
+  issueDate: Date
+  expiryDate: Date
+  notes: String! = ""
+}
+
+type CreditCardNode implements Node {
+  id: ID!
+  account: AccountNode!
+  annualFee: Decimal!
+  issueDate: Date
+  expiryDate: Date
+  notes: String!
+  benefits: [CreditCardBenefitNode!]!
+}
+
+"""A connection to a list of items."""
+type CreditCardNodeConnection {
+  """Pagination data for this connection"""
+  pageInfo: PageInfo!
+
+  """Contains the nodes in this connection"""
+  edges: [CreditCardNodeEdge!]!
+
+  """Total quantity of existing nodes."""
+  totalCount: Int
+}
+
+"""An edge in a connection."""
+type CreditCardNodeEdge {
+  """A cursor for use in pagination"""
+  cursor: String!
+
+  """The item at the end of the edge"""
+  node: CreditCardNode!
+}
+
+input CreditCardOrder {
+  annualFee: Ordering
+  issueDate: Ordering
+}
+
 enum CurrencyType {
   KRW
   USD
@@ -627,13 +699,14 @@ type Mutation {
   createAccount(data: AccountInput!): AccountNode!
   updateAccount(data: AccountPartialInput!): AccountNode!
   createTransaction(data: TransactionInput!): TransactionNode!
-  updateTransaction(data: TransactionPartialInput!): TransactionNode!
   createRetailer(data: RetailerInput!): RetailerNode!
   createStock(data: StockInput!): StockNode!
   createStockTransaction(data: StockTransactionInput!): StockTransactionNode!
   updateStockTransaction(data: StockTransactionPartialInput!): StockTransactionNode!
   createStockPrice(data: StockPriceInput!): StockPriceNode!
   createAmazonOrder(data: AmazonOrderInput!): AmazonOrderNode!
+  createCreditCard(data: CreditCardInput!): CreditCardNode!
+  createCreditCardBenefit(data: CreditCardBenefitInput!): CreditCardBenefitNode!
   createSalary(data: SalaryInput!): SalaryNode!
   updateSalary(data: SalaryPartialInput!): SalaryNode!
 }
@@ -645,6 +718,10 @@ interface Node {
 }
 
 input OneToManyInput {
+  set: ID
+}
+
+input OneToOneInput {
   set: ID
 }
 
@@ -843,6 +920,22 @@ type Query {
     """Returns the items in the list that come after the specified cursor."""
     last: Int = null
   ): ExchangeNodeConnection!
+  creditCardRelay(
+    filters: CreditCardFilter
+    order: CreditCardOrder
+
+    """Returns the items in the list that come before the specified cursor."""
+    before: String = null
+
+    """Returns the items in the list that come after the specified cursor."""
+    after: String = null
+
+    """Returns the first n items from the list."""
+    first: Int = null
+
+    """Returns the items in the list that come after the specified cursor."""
+    last: Int = null
+  ): CreditCardNodeConnection!
   salaryYears: [Int!]!
   salarySummary: [SalarySummaryNode!]!
 }
@@ -1327,13 +1420,4 @@ input TransactionOrder {
   account: AccountOrder
   amount: Ordering
   balance: Ordering
-}
-
-input TransactionPartialInput {
-  id: ID!
-  date: Date
-  type: TransactionCategory
-  retailer: OneToManyInput
-  note: String
-  isInternal: Boolean
 }

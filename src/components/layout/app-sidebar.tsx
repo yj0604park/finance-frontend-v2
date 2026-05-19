@@ -4,6 +4,7 @@ import {
   Building2,
   CheckSquare,
   ClipboardCheck,
+  CreditCard,
   LayoutDashboard,
   LineChart,
   LogOut,
@@ -38,6 +39,7 @@ const navGroups = [
     label: "Finance",
     items: [
       { title: "Accounts", url: "/accounts", icon: Building2 },
+      { title: "Credit Cards", url: "/credit-cards", icon: CreditCard },
       { title: "Transactions", url: "/transactions", icon: LineChart },
       { title: "Categories", url: "/categories", icon: Tag },
       { title: "Retailers", url: "/retailers", icon: ShoppingBag },
