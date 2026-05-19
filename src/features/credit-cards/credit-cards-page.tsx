@@ -1,5 +1,10 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { useCreditCardsQuery } from "@/graphql/generated/graphql";
+import {
+  useCreditCardsQuery,
+  useUnlinkedCreditCardAccountsQuery,
+  useCreateCreditCardMutation,
+} from "@/graphql/generated/graphql";
 import {
   Card,
   CardContent,
@@ -8,6 +13,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const BENEFIT_CATEGORY_LABELS: Record<string, string> = {
   CASHBACK: "캐시백",
@@ -30,8 +38,20 @@ function formatAmount(amount: string) {
   return new Intl.NumberFormat("ko-KR").format(num);
 }
 
+function getNumericId(globalId: string) {
+  return atob(globalId).split(":")[1];
+}
+
 export function CreditCardsPage() {
-  const { data, loading } = useCreditCardsQuery();
+  const { data, loading, refetch } = useCreditCardsQuery();
+  const { data: unlinkedData, refetch: refetchUnlinked } =
+    useUnlinkedCreditCardAccountsQuery();
+  const [createCreditCard] = useCreateCreditCardMutation();
+
+  const [showForm, setShowForm] = useState(false);
+  const [selectedAccountId, setSelectedAccountId] = useState("");
+  const [annualFee, setAnnualFee] = useState("");
+  const [notes, setNotes] = useState("");
 
   if (loading) {
     return (
@@ -42,18 +62,104 @@ export function CreditCardsPage() {
   }
 
   const cards = data?.creditCardRelay.edges.map((e) => e.node) ?? [];
+  const linkedAccountIds = new Set(cards.map((c) => c.account.id));
+  const unlinkedAccounts =
+    unlinkedData?.accountRelay.edges
+      .map((e) => e.node)
+      .filter((a) => !linkedAccountIds.has(a.id)) ?? [];
+
+  const handleCreate = async () => {
+    if (!selectedAccountId) return;
+    try {
+      await createCreditCard({
+        variables: {
+          accountId: selectedAccountId,
+          annualFee: annualFee || "0",
+          issueDate: null,
+          expiryDate: null,
+          notes,
+        },
+      });
+      setShowForm(false);
+      setSelectedAccountId("");
+      setAnnualFee("");
+      setNotes("");
+      refetch();
+      refetchUnlinked();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "생성 실패");
+    }
+  };
 
   return (
     <div className="space-y-6 p-6">
-      <div>
-        <h1 className="text-2xl font-bold">신용카드 혜택</h1>
-        <p className="text-muted-foreground">카드별 혜택 및 계좌 정보</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">신용카드 혜택</h1>
+          <p className="text-muted-foreground">카드별 혜택 및 계좌 정보</p>
+        </div>
+        {unlinkedAccounts.length > 0 && (
+          <Button onClick={() => setShowForm(!showForm)}>
+            {showForm ? "취소" : "카드 등록"}
+          </Button>
+        )}
       </div>
 
-      {cards.length === 0 ? (
+      {showForm && unlinkedAccounts.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">신용카드 등록</CardTitle>
+            <CardDescription>
+              연동되지 않은 신용카드 계좌를 선택하세요
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>계좌 선택</Label>
+                <select
+                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm"
+                  value={selectedAccountId}
+                  onChange={(e) => setSelectedAccountId(e.target.value)}
+                >
+                  <option value="">-- 선택 --</option>
+                  {unlinkedAccounts.map((acc) => (
+                    <option key={acc.id} value={acc.id}>
+                      {acc.bank.name} - {acc.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label>연회비 (원)</Label>
+                <Input
+                  type="number"
+                  placeholder="0"
+                  value={annualFee}
+                  onChange={(e) => setAnnualFee(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>메모</Label>
+              <Input
+                placeholder="카드 특징, 전월실적 조건 등"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+              />
+            </div>
+            <Button onClick={handleCreate} disabled={!selectedAccountId}>
+              등록
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {cards.length === 0 && !showForm ? (
         <Card>
           <CardContent className="py-10 text-center text-muted-foreground">
-            등록된 신용카드가 없습니다. Admin에서 CreditCard를 추가해주세요.
+            등록된 신용카드가 없습니다.
+            {unlinkedAccounts.length > 0 && " 위의 '카드 등록' 버튼으로 추가하세요."}
           </CardContent>
         </Card>
       ) : (
@@ -65,7 +171,7 @@ export function CreditCardsPage() {
                   <div>
                     <CardTitle className="text-lg">
                       <Link
-                        to={`/accounts/${btoa(`AccountNode:${atob(card.account.id).split(":")[1]}`)}`}
+                        to={`/accounts/${btoa(`AccountNode:${getNumericId(card.account.id)}`)}`}
                         className="hover:underline"
                       >
                         {card.account.name}

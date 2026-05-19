@@ -1548,6 +1548,24 @@ export type CreditCardsQueryVariables = Exact<{
 
 export type CreditCardsQuery = { __typename?: 'Query', creditCardRelay: { __typename?: 'CreditCardNodeConnection', edges: Array<{ __typename?: 'CreditCardNodeEdge', node: { __typename?: 'CreditCardNode', id: string, annualFee: string, issueDate: string | null, expiryDate: string | null, notes: string, account: { __typename?: 'AccountNode', id: string, name: string, amount: string, lastTransaction: string | null, isActive: boolean, bank: { __typename?: 'BankNode', id: string, name: string } }, benefits: Array<{ __typename?: 'CreditCardBenefitNode', id: string, category: string, title: string, description: string, rate: string | null, capAmount: string | null, conditions: string }> } }> } };
 
+export type UnlinkedCreditCardAccountsQueryVariables = Exact<{
+  first?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type UnlinkedCreditCardAccountsQuery = { __typename?: 'Query', accountRelay: { __typename?: 'AccountNodeConnection', edges: Array<{ __typename?: 'AccountNodeEdge', node: { __typename?: 'AccountNode', id: string, name: string, amount: string, bank: { __typename?: 'BankNode', id: string, name: string } } }> } };
+
+export type CreateCreditCardMutationVariables = Exact<{
+  accountId: Scalars['ID']['input'];
+  annualFee: InputMaybe<Scalars['Decimal']['input']>;
+  issueDate: InputMaybe<Scalars['Date']['input']>;
+  expiryDate: InputMaybe<Scalars['Date']['input']>;
+  notes?: Scalars['String']['input'];
+}>;
+
+
+export type CreateCreditCardMutation = { __typename?: 'Mutation', createCreditCard: { __typename?: 'CreditCardNode', id: string, annualFee: string, account: { __typename?: 'AccountNode', id: string, name: string } } };
+
 export type GetExchangeListQueryVariables = Exact<{
   first: Scalars['Int']['input'];
   after: Scalars['String']['input'];
@@ -2612,6 +2630,106 @@ export type CreditCardsQueryHookResult = ReturnType<typeof useCreditCardsQuery>;
 export type CreditCardsLazyQueryHookResult = ReturnType<typeof useCreditCardsLazyQuery>;
 export type CreditCardsSuspenseQueryHookResult = ReturnType<typeof useCreditCardsSuspenseQuery>;
 export type CreditCardsQueryResult = Apollo.QueryResult<CreditCardsQuery, CreditCardsQueryVariables>;
+export const UnlinkedCreditCardAccountsDocument = gql`
+    query UnlinkedCreditCardAccounts($first: Int = 100) {
+  accountRelay(
+    filters: {type: {exact: CREDIT_CARD}, isActive: {exact: true}, bank: {}}
+    first: $first
+  ) {
+    edges {
+      node {
+        id
+        name
+        bank {
+          id
+          name
+        }
+        amount
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useUnlinkedCreditCardAccountsQuery__
+ *
+ * To run a query within a React component, call `useUnlinkedCreditCardAccountsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useUnlinkedCreditCardAccountsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useUnlinkedCreditCardAccountsQuery({
+ *   variables: {
+ *      first: // value for 'first'
+ *   },
+ * });
+ */
+export function useUnlinkedCreditCardAccountsQuery(baseOptions?: Apollo.QueryHookOptions<UnlinkedCreditCardAccountsQuery, UnlinkedCreditCardAccountsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<UnlinkedCreditCardAccountsQuery, UnlinkedCreditCardAccountsQueryVariables>(UnlinkedCreditCardAccountsDocument, options);
+      }
+export function useUnlinkedCreditCardAccountsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<UnlinkedCreditCardAccountsQuery, UnlinkedCreditCardAccountsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<UnlinkedCreditCardAccountsQuery, UnlinkedCreditCardAccountsQueryVariables>(UnlinkedCreditCardAccountsDocument, options);
+        }
+// @ts-ignore
+export function useUnlinkedCreditCardAccountsSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<UnlinkedCreditCardAccountsQuery, UnlinkedCreditCardAccountsQueryVariables>): Apollo.UseSuspenseQueryResult<UnlinkedCreditCardAccountsQuery, UnlinkedCreditCardAccountsQueryVariables>;
+export function useUnlinkedCreditCardAccountsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<UnlinkedCreditCardAccountsQuery, UnlinkedCreditCardAccountsQueryVariables>): Apollo.UseSuspenseQueryResult<UnlinkedCreditCardAccountsQuery | undefined, UnlinkedCreditCardAccountsQueryVariables>;
+export function useUnlinkedCreditCardAccountsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<UnlinkedCreditCardAccountsQuery, UnlinkedCreditCardAccountsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<UnlinkedCreditCardAccountsQuery, UnlinkedCreditCardAccountsQueryVariables>(UnlinkedCreditCardAccountsDocument, options);
+        }
+export type UnlinkedCreditCardAccountsQueryHookResult = ReturnType<typeof useUnlinkedCreditCardAccountsQuery>;
+export type UnlinkedCreditCardAccountsLazyQueryHookResult = ReturnType<typeof useUnlinkedCreditCardAccountsLazyQuery>;
+export type UnlinkedCreditCardAccountsSuspenseQueryHookResult = ReturnType<typeof useUnlinkedCreditCardAccountsSuspenseQuery>;
+export type UnlinkedCreditCardAccountsQueryResult = Apollo.QueryResult<UnlinkedCreditCardAccountsQuery, UnlinkedCreditCardAccountsQueryVariables>;
+export const CreateCreditCardDocument = gql`
+    mutation CreateCreditCard($accountId: ID!, $annualFee: Decimal, $issueDate: Date, $expiryDate: Date, $notes: String! = "") {
+  createCreditCard(
+    data: {account: {set: $accountId}, annualFee: $annualFee, issueDate: $issueDate, expiryDate: $expiryDate, notes: $notes}
+  ) {
+    id
+    account {
+      id
+      name
+    }
+    annualFee
+  }
+}
+    `;
+export type CreateCreditCardMutationFn = Apollo.MutationFunction<CreateCreditCardMutation, CreateCreditCardMutationVariables>;
+
+/**
+ * __useCreateCreditCardMutation__
+ *
+ * To run a mutation, you first call `useCreateCreditCardMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateCreditCardMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createCreditCardMutation, { data, loading, error }] = useCreateCreditCardMutation({
+ *   variables: {
+ *      accountId: // value for 'accountId'
+ *      annualFee: // value for 'annualFee'
+ *      issueDate: // value for 'issueDate'
+ *      expiryDate: // value for 'expiryDate'
+ *      notes: // value for 'notes'
+ *   },
+ * });
+ */
+export function useCreateCreditCardMutation(baseOptions?: Apollo.MutationHookOptions<CreateCreditCardMutation, CreateCreditCardMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateCreditCardMutation, CreateCreditCardMutationVariables>(CreateCreditCardDocument, options);
+      }
+export type CreateCreditCardMutationHookResult = ReturnType<typeof useCreateCreditCardMutation>;
+export type CreateCreditCardMutationResult = Apollo.MutationResult<CreateCreditCardMutation>;
+export type CreateCreditCardMutationOptions = Apollo.BaseMutationOptions<CreateCreditCardMutation, CreateCreditCardMutationVariables>;
 export const GetExchangeListDocument = gql`
     query GetExchangeList($first: Int!, $after: String!) {
   exchangeRelay(order: {date: DESC}, first: $first, after: $after) {

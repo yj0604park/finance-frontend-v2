@@ -31,3 +31,47 @@ query CreditCards($first: Int = 100) {
     }
   }
 }
+
+query UnlinkedCreditCardAccounts($first: Int = 100) {
+  accountRelay(
+    filters: { type: { exact: CREDIT_CARD }, isActive: { exact: true }, bank: {} }
+    first: $first
+  ) {
+    edges {
+      node {
+        id
+        name
+        bank {
+          id
+          name
+        }
+        amount
+      }
+    }
+  }
+}
+
+mutation CreateCreditCard(
+  $accountId: ID!
+  $annualFee: Decimal
+  $issueDate: Date
+  $expiryDate: Date
+  $notes: String! = ""
+) {
+  createCreditCard(
+    data: {
+      account: { set: $accountId }
+      annualFee: $annualFee
+      issueDate: $issueDate
+      expiryDate: $expiryDate
+      notes: $notes
+    }
+  ) {
+    id
+    account {
+      id
+      name
+    }
+    annualFee
+  }
+}
